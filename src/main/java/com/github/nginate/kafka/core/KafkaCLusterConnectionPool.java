@@ -3,16 +3,16 @@ package com.github.nginate.kafka.core;
 import java.io.Closeable;
 import java.net.InetAddress;
 
-public interface KafkaCLusterConnectionPool extends Closeable{
+public interface KafkaCLusterConnectionPool extends Closeable {
     KafkaBrokerConnection connect(InetAddress address);
 
     void releaseConnection(KafkaBrokerConnection connection);
 
     void closeConnection(KafkaBrokerConnection connection);
 
-    void setMaxConnections(int maxConnections);
-
     int getMaxConnections();
+
+    void setMaxConnections(int maxConnections);
 
     void setConnectionEventListener(ConnectionEventListener eventListener);
 

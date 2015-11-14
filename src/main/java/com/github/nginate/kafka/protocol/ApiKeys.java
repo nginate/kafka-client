@@ -18,9 +18,13 @@ public enum ApiKeys {
     JOIN_GROUP(11, "join_group"),
     HEARTBEAT(12, "heartbeat");
 
-    /** the perminant and immutable id of an API--this can't change ever */
+    /**
+     * the perminant and immutable id of an API--this can't change ever
+     */
     private final int id;
-    /** an english description of the api--this is for debugging and can change */
+    /**
+     * an english description of the api--this is for debugging and can change
+     */
     private final String name;
 
 }

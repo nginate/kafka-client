@@ -3,7 +3,9 @@ package com.github.nginate.kafka.protocol;
 import lombok.experimental.UtilityClass;
 
 /**
- * @see <a href="https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes">Kafka protocol errors</a>
+ * @see <a href=
+ * "https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes">
+ * Kafka protocol errors</a>
  */
 @UtilityClass
 public final class ErrorCodes {
@@ -16,7 +18,8 @@ public final class ErrorCodes {
      */
     public static final int Unknown = -1;
     /**
-     * The requested offset is outside the range of offsets maintained by the server for the given topic/partition.
+     * The requested offset is outside the range of offsets maintained by the server for the given
+     * topic/partition.
      */
     public static final int OffsetOutOfRange = 1;
     /**
@@ -32,11 +35,13 @@ public final class ErrorCodes {
      */
     public static final int InvalidMessageSize = 4;
     /**
-     * This error is thrown if we are in the middle of a leadership election and there is currently no leader for this partition and hence it is unavailable for writes.
+     * This error is thrown if we are in the middle of a leadership election and there is currently
+     * no leader for this partition and hence it is unavailable for writes.
      */
     public static final int LeaderNotAvailable = 5;
     /**
-     * This error is thrown if the client attempts to send messages to a replica that is not the leader for some partition. It indicates that the clients metadata is out of date.
+     * This error is thrown if the client attempts to send messages to a replica that is not the
+     * leader for some partition. It indicates that the clients metadata is out of date.
      */
     public static final int NotLeaderForPartition = 6;
     /**
@@ -52,7 +57,8 @@ public final class ErrorCodes {
      */
     public static final int ReplicaNotAvailable = 9;
     /**
-     * The server has a configurable maximum message size to avoid unbounded memory allocation. This error is thrown if the client attempt to produce a message larger than this maximum.
+     * The server has a configurable maximum message size to avoid unbounded memory allocation. This
+     * error is thrown if the client attempt to produce a message larger than this maximum.
      */
     public static final int MessageSizeTooLarge = 10;
     /**
@@ -64,15 +70,18 @@ public final class ErrorCodes {
      */
     public static final int OffsetMetadataTooLargeCode = 12;
     /**
-     * The broker returns this error code for an offset fetch request if it is still loading offsets (after a leader change for that offsets topic partition).
+     * The broker returns this error code for an offset fetch request if it is still loading offsets
+     * (after a leader change for that offsets topic partition).
      */
     public static final int OffsetsLoadInProgressCode = 14;
     /**
-     * The broker returns this error code for consumer metadata requests or offset commit requests if the offsets topic has not yet been created.
+     * The broker returns this error code for consumer metadata requests or offset commit requests
+     * if the offsets topic has not yet been created.
      */
     public static final int ConsumerCoordinatorNotAvailableCode = 15;
     /**
-     * The broker returns this error code if it receives an offset fetch or commit request for a consumer group that it is not a coordinator for.
+     * The broker returns this error code if it receives an offset fetch or commit request for a
+     * consumer group that it is not a coordinator for.
      */
     public static final int NotCoordinatorForConsumerCode = 16;
 }

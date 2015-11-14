@@ -2,7 +2,6 @@ package com.github.nginate.kafka.util;
 
 import lombok.experimental.UtilityClass;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
