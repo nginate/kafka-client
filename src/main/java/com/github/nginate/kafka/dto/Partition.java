@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.protocol;
+package com.github.nginate.kafka.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

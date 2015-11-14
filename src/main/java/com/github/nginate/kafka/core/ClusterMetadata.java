@@ -1,8 +1,8 @@
 package com.github.nginate.kafka.core;
 
-import com.github.nginate.kafka.protocol.KafkaNode;
-import com.github.nginate.kafka.protocol.Partition;
-import com.github.nginate.kafka.protocol.TopicPartition;
+import com.github.nginate.kafka.dto.KafkaNode;
+import com.github.nginate.kafka.dto.Partition;
+import com.github.nginate.kafka.dto.TopicPartition;
 import lombok.Synchronized;
 
 import javax.annotation.concurrent.ThreadSafe;

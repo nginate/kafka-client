@@ -1,7 +1,7 @@
 package com.github.nginate.kafka;
 
 import com.github.nginate.kafka.core.ClusterMetadata;
-import com.github.nginate.kafka.protocol.Partition;
+import com.github.nginate.kafka.dto.Partition;
 
 import java.io.Closeable;
 import java.net.InetAddress;

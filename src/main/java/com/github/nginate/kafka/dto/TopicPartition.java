@@ -1,17 +1,15 @@
-package com.github.nginate.kafka.protocol;
+package com.github.nginate.kafka.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.net.InetAddress;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class KafkaNode {
-    private int id;
-    private InetAddress address;
+public class TopicPartition {
+    private int partition;
+    private String topic;
 }
