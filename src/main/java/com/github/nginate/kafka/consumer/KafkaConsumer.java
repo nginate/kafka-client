@@ -6,4 +6,8 @@ public interface KafkaConsumer<T> {
     void addMessageHandler(MessageHandler<T> messageHandler);
 
     void removeMessageHandler(MessageHandler<T> messageHandler);
+
+    void start();
+
+    void stop();
 }
