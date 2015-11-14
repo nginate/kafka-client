@@ -1,12 +1,19 @@
 package com.github.nginate.kafka;
 
+import org.apache.kafka.common.Cluster;
+import org.apache.kafka.common.PartitionInfo;
+
 import java.io.Closeable;
+import java.net.InetAddress;
+import java.util.List;
 
 public interface KafkaClusterClient extends Closeable {
 
-    String getLeader(String topic);
+    InetAddress getLeader(PartitionInfo partitionInfo);
 
-    void getPartitions();
+    List<PartitionInfo> getPartitions(List<String> topics);
 
-    void getMetadata();
+    PartitionInfo getPartition(String topic);
+
+    Cluster getTopicMetadata(String topic);
 }
