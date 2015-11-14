@@ -1,7 +1,7 @@
 package com.github.nginate.kafka;
 
-import org.apache.kafka.common.Cluster;
-import org.apache.kafka.common.PartitionInfo;
+import com.github.nginate.kafka.core.ClusterMetadata;
+import com.github.nginate.kafka.protocol.Partition;
 
 import java.io.Closeable;
 import java.net.InetAddress;
@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface KafkaClusterClient extends Closeable {
 
-    InetAddress getLeader(PartitionInfo partitionInfo);
+    InetAddress getLeader(Partition partition);
 
-    List<PartitionInfo> getPartitions(List<String> topics);
+    List<Partition> getPartitions(List<String> topics);
 
-    PartitionInfo getPartition(String topic);
+    Partition getPartition(String topic);
 
-    Cluster getTopicMetadata(String topic);
+    ClusterMetadata getTopicMetadata(String topic);
 }
