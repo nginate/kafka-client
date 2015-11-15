@@ -7,5 +7,4 @@ import java.lang.annotation.*;
 @Documented
 public @interface Type {
     TypeName value();
-    boolean repeatable() default false;
 }

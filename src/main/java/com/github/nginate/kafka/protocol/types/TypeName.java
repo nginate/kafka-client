@@ -24,5 +24,9 @@ public enum TypeName {
     /**
      * Consist of a signed int32 giving a length N followed by N bytes of content. A length of -1 indicates null.
      */
-    BYTES
+    BYTES,
+    /**
+     * Used to mark utility objects, wrapping actual binary data for protocol
+     */
+    WRAPPER
 }
