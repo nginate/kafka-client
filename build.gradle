@@ -1,8 +1,13 @@
+plugins {
+    id 'nebula.optional-base' version '3.0.3'
+}
+
 group 'com.github.nginate'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'nebula.optional-base'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -15,9 +20,24 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.12'
     compile 'org.apache.kafka:kafka-clients:0.8.2.2'
     compile 'org.apache.zookeeper:zookeeper:3.4.6'
-    compile 'org.projectlombok:lombok:1.16.6'
-    compile 'com.google.code.findbugs:jsr305:3.0.1'
+
+    compile 'org.projectlombok:lombok:1.16.6', optional
+    compile 'com.google.code.findbugs:jsr305:3.0.1', optional
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.2.0'
+}
+
+build.dependsOn install
+
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourceJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.8'
 }
