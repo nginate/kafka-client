@@ -26,6 +26,7 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.assertj:assertj-core:3.2.0'
+    testCompile 'com.github.docker-java:docker-java:2.1.2'
 }
 
 build.dependsOn install
