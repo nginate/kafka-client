@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.ArrayUtils;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.github.nginate.kafka.util.BeanUtil.copyDockerDto;
 import static com.github.nginate.kafka.util.WaitUtil.waitUntil;
@@ -20,6 +21,7 @@ import static com.github.nginate.kafka.util.WaitUtil.waitUntil;
 @Slf4j
 @RequiredArgsConstructor
 public class DockerWrapper {
+    private final LogContainerResultCallback logResultCallback = new LogContainerResultCallback();
     private final DockerClient dockerClient;
     private final CreateContainerCmd containerConfiguration;
 
@@ -102,12 +104,7 @@ public class DockerWrapper {
             dockerClient.removeContainerCmd(containerId).withForce(true).exec();
             awaitRemoved();
         } else {
-            Optional<Container> local = findLocalContainer();
-            if (local.isPresent()) {
-                dockerClient.removeContainerCmd(local.get().getId()).withForce(true);
-            } else {
-                throw new ContainerStateException("Could not find container to purge");
-            }
+            tryWithLocalContainer(container -> dockerClient.removeContainerCmd(container.getId()).withForce(true));
         }
     }
 
@@ -116,7 +113,11 @@ public class DockerWrapper {
      */
     @Synchronized
     public void writeLogs(){
-        dockerClient.logContainerCmd(containerId).exec(new LogContainerResultCallback());
+        if (containerId != null) {
+            dockerClient.logContainerCmd(containerId).exec(logResultCallback);
+        } else {
+            tryWithLocalContainer(container -> dockerClient.logContainerCmd(container.getId()).exec(logResultCallback));
+        }
     }
 
     private void awaitStopped() {
@@ -129,6 +130,15 @@ public class DockerWrapper {
 
     private void awaitStarted() {
         waitUntil(10000, 1000, () -> inspect(containerId).getState().isRunning());
+    }
+
+    private void tryWithLocalContainer(Consumer<Container> consumer) {
+        Optional<Container> local = findLocalContainer();
+        if (local.isPresent()) {
+            consumer.accept(local.get());
+        } else {
+            throw new ContainerStateException("Could not find local container");
+        }
     }
 
     private Optional<Container> findLocalContainer() {
