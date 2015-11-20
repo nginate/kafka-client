@@ -1,10 +1,11 @@
 package com.github.nginate.kafka.protocol;
 
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public enum ApiKeys {
     PRODUCE(0),
     FETCH(1),

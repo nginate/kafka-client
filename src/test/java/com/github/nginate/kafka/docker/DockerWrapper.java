@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.nginate.kafka.docker.exceptions.ContainerStateException;
@@ -15,7 +16,6 @@ import org.apache.commons.lang.ArrayUtils;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static com.github.nginate.kafka.util.BeanUtil.copyDockerDto;
 import static com.github.nginate.kafka.util.WaitUtil.waitUntil;
 
 @Slf4j
@@ -23,7 +23,7 @@ import static com.github.nginate.kafka.util.WaitUtil.waitUntil;
 public class DockerWrapper {
     private final LogContainerResultCallback logResultCallback = new LogContainerResultCallback();
     private final DockerClient dockerClient;
-    private final CreateContainerCmd containerConfiguration;
+    private final ContainerConfig containerConfiguration;
 
     private volatile String containerId;
     private volatile boolean started;
@@ -46,14 +46,65 @@ public class DockerWrapper {
                     dockerClient.pullImageCmd(containerConfiguration.getImage()).exec(new PullImageResultCallback())
                             .awaitSuccess();
                 }
-                CreateContainerCmd containerCmd = dockerClient.createContainerCmd(containerConfiguration.getImage());
-                copyDockerDto(containerConfiguration, containerCmd);
+                CreateContainerCmd containerCmd = createContainer(dockerClient, containerConfiguration);
                 containerId = containerCmd.exec().getId();
                 awaitStarted();
             }
         } else {
             throw new ContainerStateException("Container is already running");
         }
+    }
+
+    private CreateContainerCmd createContainer(DockerClient dockerClient, ContainerConfig config) {
+        return dockerClient.createContainerCmd(config.getImage())
+                .withAttachStderr(config.isAttachStderr())
+                .withAttachStdin(config.isAttachStdin())
+                .withAttachStdout(config.isAttachStdout())
+                .withBinds(config.getBinds())
+                .withBlkioWeight(config.getBlkioWeight())
+                .withCapAdd(config.getCapAdd())
+                .withCapDrop(config.getCapDrop())
+                .withCmd(config.getCmd())
+                .withContainerIDFile(config.getContainerIDFile())
+                .withCpuPeriod(config.getCpuPeriod())
+                .withCpuset(config.getCpuset())
+                .withCpusetMems(config.getCpusetMems())
+                .withCpuShares(config.getCpuShares())
+                .withDevices(config.getDevices())
+                .withDns(config.getDns())
+                .withDnsSearch(config.getDnsSearch())
+                .withDomainName(config.getDomainName())
+                .withEntrypoint(config.getEntrypoint())
+                .withEnv(config.getEnv().entrySet().stream().map(entry -> entry.getKey()+"="+entry.getValue()).toArray(String[]::new))
+                .withExposedPorts(config.getExposedPorts().toArray(new ExposedPort[config.getExposedPorts().size()]))
+                .withExtraHosts(config.getExtraHosts())
+                .withHostName(config.getHostName())
+                .withImage(config.getImage())
+                .withLabels(config.getLabels())
+                .withLinks(config.getLinks())
+                .withLogConfig(config.getLogConfig())
+                .withLxcConf(config.getLxcConf())
+                .withMacAddress(config.getMacAddress())
+                .withMemoryLimit(config.getMemoryLimit())
+                .withMemorySwap(config.getMemorySwap())
+                .withName(config.getName())
+                .withNetworkDisabled(config.isNetworkDisabled())
+                .withOomKillDisable(config.getOomKillDisable())
+                .withPidMode(config.getPidMode())
+                .withPortBindings(config.getPortBindings())
+                .withPortSpecs(config.getPortSpecs())
+                .withPrivileged(config.isPrivileged())
+                .withPublishAllPorts(config.isPublishAllPorts())
+                .withReadonlyRootfs(config.isReadonlyRootfs())
+                .withRestartPolicy(config.getRestartPolicy())
+                .withStdInOnce(config.isStdInOnce())
+                .withStdinOpen(config.isStdinOpen())
+                .withTty(config.isTty())
+                .withUlimits(config.getUlimits())
+                .withUser(config.getUser())
+                .withVolumes(config.getVolumes().getVolumes())
+                .withVolumesFrom(config.getVolumesFrom())
+                .withWorkingDir(config.getWorkingDir());
     }
 
     /**
