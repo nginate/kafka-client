@@ -6,18 +6,34 @@ import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
 
-public interface KafkaClusterClient extends Closeable {
+public class KafkaClusterClient implements Closeable {
 
-    InetAddress getLeader(Partition partition);
+    public InetAddress getLeader(Partition partition) {
+        return null;
+    }
 
-    List<Partition> getPartitions(List<String> topics);
+    public List<Partition> getPartitions(List<String> topics) {
+        return null;
+    }
 
-    Partition getPartition(String topic);
+    public Partition getPartition(String topic) {
+        return null;
+    }
 
-    ClusterMetadata getTopicMetadata(String topic);
+    public ClusterMetadata getTopicMetadata(String topic) {
+        return null;
+    }
 
-    <RS extends Response, RQ extends Request> RS request(RQ request);
+    public <RS extends Response, RQ extends Request> RS request(RQ request) {
+        return null;
+    }
+
+    @Override
+    public void close() throws IOException {
+
+    }
 }
