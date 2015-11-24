@@ -1,6 +1,8 @@
 package com.github.nginate.kafka.docker;
 
 import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.LogConfig;
+import com.github.dockerjava.api.model.RestartPolicy;
 import com.google.common.base.Throwables;
 import lombok.experimental.UtilityClass;
 
@@ -25,6 +27,8 @@ public final class DockerConfigs {
                 .env("ADVERTISED_PORT", KAFKA_PORT.toString())
                 .env("ADVERTISED_HOST", getHostIp())
                 .env("KAFKA_HEAP_OPTS", "\"-Xmx256M -Xms128M\"")
+                .logConfig(new LogConfig(LogConfig.LoggingType.DEFAULT))
+                .restartPolicy(RestartPolicy.alwaysRestart())
                 .build();
     }
 

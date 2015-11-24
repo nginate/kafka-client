@@ -1,6 +1,6 @@
 package com.github.nginate.kafka.util;
 
-import com.github.nginate.kafka.exceptions.TimeoutException;
+import com.github.nginate.kafka.exceptions.KafkaTimeoutException;
 import com.google.common.base.Preconditions;
 import lombok.experimental.UtilityClass;
 
@@ -16,17 +16,17 @@ public final class WaitUtil {
     }
 
     public static void waitUntil(long waitMillis, long waitStepMillis, Supplier<Boolean> condition, String failureMessage) {
-        Preconditions.checkArgument(waitStepMillis >= waitMillis, "step sleep time must be less or equal to timeout");
+        Preconditions.checkArgument(waitStepMillis <= waitMillis, "step sleep time must be less or equal to timeout");
         long start = currentTimeMillis();
         try {
             while (!condition.get()) {
                 Thread.sleep(waitMillis);
                 if (currentTimeMillis() - start >= waitMillis) {
-                    throw new TimeoutException(failureMessage);
+                    throw new KafkaTimeoutException(failureMessage);
                 }
             }
         } catch (InterruptedException e) {
-            throw new TimeoutException(e.getMessage(), e);
+            throw new KafkaTimeoutException(e.getMessage(), e);
         }
     }
 }

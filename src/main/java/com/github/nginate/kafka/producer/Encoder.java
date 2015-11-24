@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.protocol.serialization;
+package com.github.nginate.kafka.producer;
 
 public interface Encoder {
     byte[] encode(Object data);

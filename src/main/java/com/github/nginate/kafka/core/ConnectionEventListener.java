@@ -4,7 +4,7 @@ import java.util.EventListener;
 
 public interface ConnectionEventListener extends EventListener {
 
-    void onConnectionClosed(KafkaBrokerConnection connection);
+    void onConnectionClosed(KafkaConnection connection);
 
-    void onConnectionError(KafkaBrokerConnection connection, Throwable error);
+    void onConnectionError(KafkaConnection connection, Throwable error);
 }

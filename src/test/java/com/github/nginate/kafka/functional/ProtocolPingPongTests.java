@@ -10,8 +10,8 @@ public class ProtocolPingPongTests extends AbstractFunctionalTest {
 
     @Test
     public void testTopicMetadataPingPong() throws Exception {
-        TopicMetadataRequest request = TopicMetadataRequest.builder().topic(new String[]{"topic"}).build();
-        MetadataResponse response = getKafkaClusterClient().request(request);
+        TopicMetadataRequest request = TopicMetadataRequest.builder().topic(new String[0]).build();
+        MetadataResponse response = getKafkaClusterClient().request(request, 1000);
 
         assertThat(response).isNotNull();
     }

@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.nginate.kafka.KafkaClusterClient;
 import com.github.nginate.kafka.docker.DockerWrapper;
+import com.github.nginate.kafka.protocol.Serializer;
 import lombok.Getter;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -21,6 +22,7 @@ public abstract class AbstractFunctionalTest {
         DockerClient dockerClient = DockerClientBuilder.getInstance("http://127.0.0.1:2375").build();
         kafkaContainer = new DockerWrapper(dockerClient, kafkaContainerConfiguration());
         kafkaContainer.start();
+        kafkaClusterClient = new KafkaClusterClient(null, new Serializer());
     }
 
     @AfterClass
