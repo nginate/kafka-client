@@ -1,5 +1,6 @@
 package com.github.nginate.kafka.protocol.messages;
 
+import com.github.nginate.kafka.network.AnswerableMessage;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,13 +11,13 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public abstract class Request extends Message{
+public abstract class Request extends Message implements AnswerableMessage {
     @Type(INT16)
     private int apiKey;
     @Type(INT16)
     private int apiVersion;
     @Type(INT32)
-    private int correlationId;
+    private Integer correlationId;
     @Type(STRING)
     private String clientId;
 }

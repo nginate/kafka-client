@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    compile 'io.netty:netty-all:4.0.31.Final'
     compile 'org.slf4j:slf4j-api:1.7.13'
     compile 'com.google.guava:guava:18.0'
     compile 'org.projectlombok:lombok:1.16.6', optional
