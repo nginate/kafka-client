@@ -89,6 +89,11 @@ public enum ApiKeys {
      * coordinator will choose the old protocol until all members have been upgraded.
      */
     JOIN_GROUP(11),
+    /**
+     * Once a member has joined and synced, it will begin sending periodic heartbeats to keep itself in the group. If
+     * not heartbeat has been received by the coordinator with the configured session timeout, the member will be kicked
+     * out of the group.
+     */
     HEARTBEAT(12);
 
     private final int id;
