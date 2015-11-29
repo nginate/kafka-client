@@ -73,6 +73,21 @@ public enum ApiKeys {
      */
     OFFSET_FETCH(9),
     CONSUMER_METADATA(10),
+    /**
+     * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics
+     * as in the initial consumer rewrite design. After finding the coordinator for the group, each member sends a
+     * JoinGroup request containing member-specific metadata. The join group request will park at the coordinator until
+     * all expected members have sent their own join group requests ("expected" in this case means all members that were
+     * part of the previous generation). Once they have done so, the coordinator randomly selects a leader from the
+     * group and sends JoinGroup responses to all the pending requests.
+     * The JoinGroup request contains an array with the group protocols that it supports along with member-specific
+     * metadata. This is basically used to ensure compatibility of group member metadata within the group. The
+     * coordinator chooses a protocol which is supported by all members of the group and returns it in the respective
+     * JoinGroup responses. If a member joins and doesn't support any of the protocols used by the rest of the group,
+     * then it will be rejected. This mechanism provides a way to update protocol metadata to a new format in a rolling
+     * upgrade scenario. The newer version will provide metadata for the new protocol and for the old protocol, and the
+     * coordinator will choose the old protocol until all members have been upgraded.
+     */
     JOIN_GROUP(11),
     HEARTBEAT(12);
 
