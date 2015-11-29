@@ -66,6 +66,11 @@ public enum ApiKeys {
      * the consumer will pick up from if it crashes before its next commit().
      */
     OFFSET_COMMIT(8),
+    /**
+     * This api reads back a consumer position previously written using the OffsetCommit api. Note that if there is no
+     * offset associated with a topic-partition under that consumer group the broker does not set an error code (since
+     * it is not really an error), but returns empty metadata and sets the offset field to -1.
+     */
     OFFSET_FETCH(9),
     CONSUMER_METADATA(10),
     JOIN_GROUP(11),
