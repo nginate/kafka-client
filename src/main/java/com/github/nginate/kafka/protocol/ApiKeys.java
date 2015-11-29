@@ -60,6 +60,11 @@ public enum ApiKeys {
     METADATA(3),
     LEADER_AND_ISR(4),
     STOP_REPLICA(5),
+    /**
+     * This api saves out the consumer's position in the stream for one or more partitions. In the scala API this
+     * happens when the consumer calls commit() or in the background if "autocommit" is enabled. This is the position
+     * the consumer will pick up from if it crashes before its next commit().
+     */
     OFFSET_COMMIT(8),
     OFFSET_FETCH(9),
     CONSUMER_METADATA(10),
