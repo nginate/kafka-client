@@ -34,6 +34,14 @@ public enum ApiKeys {
      * next major release.
      */
     FETCH(1),
+    /**
+     * This API describes the valid offset range available for a set of topic-partitions. As with the produce and fetch
+     * APIs requests must be directed to the broker that is currently the leader for the partitions in question. This
+     * can be determined using the metadata API.
+     * The response contains the starting offset of each segment for the requested partition as well as the
+     * "log end offset" i.e. the offset of the next message that would be appended to the given partition. We agree that
+     * this API is slightly funky.
+     */
     LIST_OFFSETS(2),
     /**
      * This API answers the following questions:
