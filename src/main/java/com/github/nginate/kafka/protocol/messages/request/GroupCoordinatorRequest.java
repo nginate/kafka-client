@@ -1,5 +1,7 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
+import com.github.nginate.kafka.protocol.ApiKey;
+import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
@@ -15,7 +17,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
  */
 @Data
 @Builder
-//@ApiKey(ApiKeys.) FIXME
+@ApiKey(ApiKeys.GROUP_COORDINATOR)
 @EqualsAndHashCode(callSuper = true)
 public class GroupCoordinatorRequest extends Request {
     @Type(STRING)

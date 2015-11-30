@@ -72,7 +72,7 @@ public enum ApiKeys {
      * it is not really an error), but returns empty metadata and sets the offset field to -1.
      */
     OFFSET_FETCH(9),
-    CONSUMER_METADATA(10),
+    GROUP_COORDINATOR(10),
     /**
      * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics
      * as in the initial consumer rewrite design. After finding the coordinator for the group, each member sends a
@@ -94,7 +94,11 @@ public enum ApiKeys {
      * not heartbeat has been received by the coordinator with the configured session timeout, the member will be kicked
      * out of the group.
      */
-    HEARTBEAT(12);
+    HEARTBEAT(12),
+    LEAVE_GROUP(13),
+    SYNC_GROUP(14),
+    DESCRIBE_GROUPS(15),
+    LIST_GROUPS(16);
 
     private final int id;
 }

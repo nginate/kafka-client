@@ -1,5 +1,7 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
+import com.github.nginate.kafka.protocol.ApiKey;
+import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.Request;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +13,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @Builder
-//@ApiKey(ApiKeys.) FIXME
+@ApiKey(ApiKeys.LIST_GROUPS)
 @EqualsAndHashCode(callSuper = true)
 public class ListGroupsRequest extends Request {
 }

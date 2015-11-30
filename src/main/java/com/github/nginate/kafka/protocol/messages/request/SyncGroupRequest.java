@@ -1,5 +1,7 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
+import com.github.nginate.kafka.protocol.ApiKey;
+import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
@@ -19,7 +21,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @Builder
-//@ApiKey(ApiKeys.) FIXME
+@ApiKey(ApiKeys.SYNC_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class SyncGroupRequest extends Request {
     @Type(STRING)

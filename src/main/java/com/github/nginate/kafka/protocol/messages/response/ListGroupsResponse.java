@@ -1,16 +1,16 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
+import com.github.nginate.kafka.protocol.ApiKey;
+import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.INT16;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
-import static com.github.nginate.kafka.protocol.types.TypeName.WRAPPER;
+import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
 @Data
-//@ApiKey(ApiKeys.) FIXME
+@ApiKey(ApiKeys.LIST_GROUPS)
 @EqualsAndHashCode(callSuper = true)
 public class ListGroupsResponse extends Response {
     @Type(INT16)
