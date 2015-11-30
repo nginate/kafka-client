@@ -13,9 +13,9 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 @EqualsAndHashCode(callSuper = true)
 public abstract class Request extends Message implements AnswerableMessage {
     @Type(INT16)
-    private int apiKey;
+    private Short apiKey;
     @Type(INT16)
-    private int apiVersion;
+    private Short apiVersion;
     @Type(INT32)
     private Integer correlationId;
     @Type(STRING)

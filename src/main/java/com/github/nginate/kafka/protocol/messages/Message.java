@@ -8,5 +8,5 @@ import static com.github.nginate.kafka.protocol.types.TypeName.INT8;
 @Data
 public abstract class Message {
     @Type(INT8)
-    private int size;
+    private Byte size;
 }
