@@ -13,6 +13,6 @@ import static com.github.nginate.kafka.protocol.types.TypeName.INT16;
 @ApiKey(ApiKeys.LEAVE_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class LeaveGroupResponse extends Response {
-    @Type(INT16)
+    @Type(value = INT16, order = 2)
     private Short errorCode;
 }

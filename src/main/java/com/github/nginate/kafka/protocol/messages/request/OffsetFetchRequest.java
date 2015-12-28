@@ -8,9 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
-import static com.github.nginate.kafka.protocol.types.TypeName.WRAPPER;
+import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
 /**
  * This api reads back a consumer position previously written using the OffsetCommit api. Note that if there is no
@@ -22,16 +20,16 @@ import static com.github.nginate.kafka.protocol.types.TypeName.WRAPPER;
 @ApiKey(ApiKeys.OFFSET_FETCH)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetFetchRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String consumerGroup;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 5)
     private OffsetFetchRequestTopicData[] topicData;
 
     @Data
     public static class OffsetFetchRequestTopicData {
         @Type(STRING)
         private String topic;
-        @Type(INT32)
+        @Type(value = INT32, order = 1)
         private Integer[] partitions;
     }
 }

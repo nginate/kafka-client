@@ -36,22 +36,22 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.JOIN_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class JoinGroupRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupId;
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer sessionTimeout;
-    @Type(STRING)
+    @Type(value = STRING, order = 6)
     private String memberId;
-    @Type(STRING)
+    @Type(value = STRING, order = 7)
     private String protocolType;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 8)
     private GroupProtocols[] groupProtocols;
 
     @Data
     public static class GroupProtocols {
         @Type(STRING)
         private String protocolType;
-        @Type(BYTES)
+        @Type(value = BYTES, order = 1)
         private byte[] protocolMetadata;
     }
 }

@@ -13,7 +13,7 @@ public enum ApiKeys {
      * but since no offset has been assigned to the messages at the time of the send the producer is free to fill in
      * that field in any way it likes.
      */
-    PRODUCE(0),
+    PRODUCE((short)0),
     /**
      * The fetch API is used to fetch a chunk of one or more logs for some topic-partitions. Logically one specifies the
      * topics, partitions, and starting offset at which to begin the fetch and gets back a chunk of messages. In general,
@@ -33,7 +33,7 @@ public enum ApiKeys {
      * will not allow dynamic reassignment of partitions should that consumer fail. We hope to address this gap in the
      * next major release.
      */
-    FETCH(1),
+    FETCH((short)1),
     /**
      * This API describes the valid offset range available for a set of topic-partitions. As with the produce and fetch
      * APIs requests must be directed to the broker that is currently the leader for the partitions in question. This
@@ -42,7 +42,7 @@ public enum ApiKeys {
      * "log end offset" i.e. the offset of the next message that would be appended to the given partition. We agree that
      * this API is slightly funky.
      */
-    LIST_OFFSETS(2),
+    LIST_OFFSETS((short)2),
     /**
      * This API answers the following questions:
      *  What topics exist?
@@ -57,22 +57,22 @@ public enum ApiKeys {
      * broker configuration, a topic metadata request will create the topic with the default replication factor and
      * number of partitions.
      */
-    METADATA(3),
-    LEADER_AND_ISR(4),
-    STOP_REPLICA(5),
+    METADATA((short)3),
+    LEADER_AND_ISR((short)4),
+    STOP_REPLICA((short)5),
     /**
      * This api saves out the consumer's position in the stream for one or more partitions. In the scala API this
      * happens when the consumer calls commit() or in the background if "autocommit" is enabled. This is the position
      * the consumer will pick up from if it crashes before its next commit().
      */
-    OFFSET_COMMIT(8),
+    OFFSET_COMMIT((short)8),
     /**
      * This api reads back a consumer position previously written using the OffsetCommit api. Note that if there is no
      * offset associated with a topic-partition under that consumer group the broker does not set an error code (since
      * it is not really an error), but returns empty metadata and sets the offset field to -1.
      */
-    OFFSET_FETCH(9),
-    GROUP_COORDINATOR(10),
+    OFFSET_FETCH((short)9),
+    GROUP_COORDINATOR((short)10),
     /**
      * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics
      * as in the initial consumer rewrite design. After finding the coordinator for the group, each member sends a
@@ -88,17 +88,17 @@ public enum ApiKeys {
      * upgrade scenario. The newer version will provide metadata for the new protocol and for the old protocol, and the
      * coordinator will choose the old protocol until all members have been upgraded.
      */
-    JOIN_GROUP(11),
+    JOIN_GROUP((short)11),
     /**
      * Once a member has joined and synced, it will begin sending periodic heartbeats to keep itself in the group. If
      * not heartbeat has been received by the coordinator with the configured session timeout, the member will be kicked
      * out of the group.
      */
-    HEARTBEAT(12),
-    LEAVE_GROUP(13),
-    SYNC_GROUP(14),
-    DESCRIBE_GROUPS(15),
-    LIST_GROUPS(16);
+    HEARTBEAT((short)12),
+    LEAVE_GROUP((short)13),
+    SYNC_GROUP((short)14),
+    DESCRIBE_GROUPS((short)15),
+    LIST_GROUPS((short)16);
 
-    private final int id;
+    private final short id;
 }

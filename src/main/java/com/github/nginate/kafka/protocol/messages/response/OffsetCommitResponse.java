@@ -13,21 +13,21 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.OFFSET_COMMIT)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetCommitResponse extends Response {
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 2)
     private OffsetCommitResponseTopicData[] topicData;
 
     @Data
     public static class OffsetCommitResponseTopicData {
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private OffsetCommitResponsePartitionData[] partitionData;
 
         @Data
         public static class OffsetCommitResponsePartitionData {
             @Type(INT32)
             private Integer partition;
-            @Type(INT16)
+            @Type(value = INT16, order = 1)
             private Short errorCode;
         }
     }

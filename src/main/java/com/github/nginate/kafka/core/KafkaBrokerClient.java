@@ -19,6 +19,10 @@ public class KafkaBrokerClient implements Closeable {
         binaryTcpClient = new BinaryTcpClient(config);
     }
 
+    public KafkaBrokerClient(BinaryTcpClient client) {
+        binaryTcpClient = client;
+    }
+
     public void connect() {
         binaryTcpClient.connect();
     }

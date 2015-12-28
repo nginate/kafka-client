@@ -7,4 +7,6 @@ import java.lang.annotation.*;
 @Documented
 public @interface Type {
     TypeName value();
+
+    int order() default 0;
 }

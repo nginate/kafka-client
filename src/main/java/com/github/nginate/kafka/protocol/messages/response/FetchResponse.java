@@ -14,7 +14,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.FETCH)
 @EqualsAndHashCode(callSuper = true)
 public class FetchResponse extends Response {
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 2)
     private FetchResponseTopicData[] topicData;
 
     @Data
@@ -24,7 +24,7 @@ public class FetchResponse extends Response {
          */
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private FetchResponsePartitionData[] partitionData;
 
         @Data
@@ -34,23 +34,23 @@ public class FetchResponse extends Response {
              */
             @Type(INT32)
             private Integer partition;
-            @Type(INT16)
+            @Type(value = INT16, order = 1)
             private Short errorCode;
             /**
              * The offset at the end of the log for this partition. This can be used by the client to determine how many
              * messages behind the end of the log they are.
              */
-            @Type(INT64)
+            @Type(value = INT64, order = 2)
             private Long highWatermarkOffset;
             /**
              * The size in bytes of the message set for this partition
              */
-            @Type(INT32)
+            @Type(value = INT32, order = 3)
             private Integer messageSetSize;
             /**
              * The message data fetched from this partition, in the format described above.
              */
-            @Type(WRAPPER)
+            @Type(value = WRAPPER, order = 4)
             private MessageSet messageSet;
         }
     }

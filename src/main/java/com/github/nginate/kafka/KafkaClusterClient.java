@@ -4,7 +4,6 @@ import com.github.nginate.kafka.core.ClusterMetadata;
 import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.dto.Partition;
 import com.github.nginate.kafka.exceptions.CommunicationException;
-import com.github.nginate.kafka.network.BinaryMessageSerializer;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 public class KafkaClusterClient implements Closeable {
 
     private final String topic;
-    private final BinaryMessageSerializer binaryMessageSerializer;
 
     public InetAddress getLeader(Partition partition) {
         return null;

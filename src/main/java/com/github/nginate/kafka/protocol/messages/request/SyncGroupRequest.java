@@ -24,20 +24,20 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.SYNC_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class SyncGroupRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupId;
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer generationId;
-    @Type(STRING)
+    @Type(value = STRING, order = 6)
     private String memberId;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 7)
     private GroupAssignment[] groupAssignments;
 
     @Data
     public static class GroupAssignment {
         @Type(STRING)
         private String memberId;
-        @Type(BYTES)
+        @Type(value = BYTES, order = 1)
         private byte[] memberAssignment;
     }
 }

@@ -20,7 +20,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  * metadata that should be committed with this offset commit. It could be the name of a file that contains state
  * information for the processor, or a small piece of state. Basically it is just a generic string field that will be
  * passed back to the client when the offset is fetched. It will likely have a tight size limit to avoid server impact.
- *
+ * <p>
  * In v0 and v1, the time stamp of each partition is defined as the commit time stamp, and the offset coordinator will
  * retain the committed offset until its commit time stamp + offset retention time specified in the broker config; if
  * the time stamp field is not set, brokers will set the commit time as the receive time before committing the offset,
@@ -36,37 +36,37 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.OFFSET_COMMIT)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetCommitRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String consumerGroupId;
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     @Versioned(since = ApiVersion.V1)
     private Integer consumerGroupGenerationId;
-    @Type(STRING)
+    @Type(value = STRING, order = 6)
     @Versioned(since = ApiVersion.V1)
     private String consumerId;
-    @Type(INT64)
+    @Type(value = INT64, order = 7)
     @Versioned(since = ApiVersion.V2)
     private Long retentionTime;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 8)
     private OffsetCommitRequestTopicData[] topicData;
 
     @Data
     public static class OffsetCommitRequestTopicData {
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private OffsetCommitRequestPartitionData[] partitionData;
 
         @Data
         public static class OffsetCommitRequestPartitionData {
             @Type(INT32)
             private Integer partition;
-            @Type(INT64)
+            @Type(value = INT64, order = 1)
             private Long offset;
-            @Type(INT64)
+            @Type(value = INT64, order = 2)
             @Versioned(includesVersions = ApiVersion.V1)
             private Long timestamp;
-            @Type(STRING)
+            @Type(value = STRING, order = 3)
             private String metadata;
         }
     }

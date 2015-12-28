@@ -30,7 +30,7 @@ public class ProduceRequest extends Request {
      * a response. For any number > 1 the server will block waiting for this number of acknowledgements to occur
      * (but the server will never wait for more acknowledgements than there are in-sync replicas).
      */
-    @Type(INT16)
+    @Type(value = INT16, order = 4)
     private Short requiredAcks;
     /**
      * This provides a maximum time in milliseconds the server can await the receipt of the number of acknowledgements
@@ -40,10 +40,10 @@ public class ProduceRequest extends Request {
      * the local write time exceeds this timeout it will not be respected. To get a hard timeout of this type the client
      * should use the socket timeout.
      */
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer timeout;
 
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 6)
     private TopicProduceData[] topicProduceData;
 
     @Data
@@ -54,7 +54,7 @@ public class ProduceRequest extends Request {
         @Type(STRING)
         private String topic;
 
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private PartitionProduceData[] partitionProduceData;
 
         @Data
@@ -67,12 +67,12 @@ public class ProduceRequest extends Request {
             /**
              * The size, in bytes, of the message set that follows.
              */
-            @Type(INT32)
+            @Type(value = INT32, order = 1)
             private Integer messageSetSize;
             /**
              * A set of messages in the standard format described above.
              */
-            @Type(WRAPPER)
+            @Type(value = WRAPPER, order = 2)
             private MessageSet messageSet;
         }
 

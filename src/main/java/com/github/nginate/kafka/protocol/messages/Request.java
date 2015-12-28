@@ -4,20 +4,21 @@ import com.github.nginate.kafka.network.AnswerableMessage;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.INT16;
-import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
+/**
+ * Field order starts with 1 because of Message size field
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public abstract class Request extends Message implements AnswerableMessage {
-    @Type(INT16)
-    private Short apiKey;
-    @Type(INT16)
+public abstract class Request extends Message implements AnswerableMessage<Integer> {
+    @Type(value = INT16, order = 1)
     private Short apiVersion;
-    @Type(INT32)
+    @Type(value = INT32, order = 2)
+    @Getter
     private Integer correlationId;
-    @Type(STRING)
+    @Type(value = STRING, order = 3)
     private String clientId;
 }

@@ -39,13 +39,13 @@ public class FetchRequest extends Request {
      * always specify this as -1 as they have no node id. Other brokers set this to be their own node id. The value -2
      * is accepted to allow a non-broker to issue fetch requests as if it were a replica broker for debugging purposes.
      */
-    @Type(INT32)
+    @Type(value = INT32, order = 4)
     private Integer replicaId;
     /**
      * The max wait time is the maximum amount of time in milliseconds to block waiting if insufficient data is
      * available at the time the request is issued.
      */
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer maxWaitTime;
     /**
      * This is the minimum number of bytes of messages that must be available to give a response. If the client sets
@@ -56,9 +56,9 @@ public class FetchRequest extends Request {
      * large chunks of data (e.g. setting MaxWaitTime to 100 ms and setting MinBytes to 64k would allow the server to
      * wait up to 100ms to try to accumulate 64k of data before responding).
      */
-    @Type(INT32)
+    @Type(value = INT32, order = 6)
     private Integer minBytes;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 7)
     private FetchRequestTopicData[] topicData;
 
     @Data
@@ -68,7 +68,7 @@ public class FetchRequest extends Request {
          */
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private FetchRequestPartitionData[] partitionData;
 
         @Data
@@ -81,13 +81,13 @@ public class FetchRequest extends Request {
             /**
              * The offset to begin this fetch from.
              */
-            @Type(INT64)
+            @Type(value = INT64, order = 1)
             private Long fetchOffset;
             /**
              * The maximum bytes to include in the message set for this partition. This helps bound the size of the
              * response.
              */
-            @Type(INT32)
+            @Type(value = INT32, order = 2)
             private Integer maxBytes;
         }
     }

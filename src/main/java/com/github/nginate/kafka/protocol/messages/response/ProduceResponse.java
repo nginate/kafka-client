@@ -13,7 +13,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.PRODUCE)
 @EqualsAndHashCode(callSuper = true)
 public class ProduceResponse extends Response {
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 2)
     private ProduceResponseData[] produceResponseData;
 
     @Data
@@ -23,7 +23,7 @@ public class ProduceResponse extends Response {
          */
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private ProduceResponsePartitionData[] produceResponsePartitionData;
 
         @Data
@@ -38,12 +38,12 @@ public class ProduceResponse extends Response {
              * partition may be unavailable or maintained on a different host, while others may have successfully
              * accepted the produce request.
              */
-            @Type(INT16)
+            @Type(value = INT16, order = 1)
             private Short errorCode;
             /**
              * The offset assigned to the first message in the message set appended to this partition.
              */
-            @Type(INT64)
+            @Type(value = INT64, order = 2)
             private Long offset;
         }
     }

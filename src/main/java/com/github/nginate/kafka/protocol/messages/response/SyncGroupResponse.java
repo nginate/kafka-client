@@ -17,8 +17,8 @@ import static com.github.nginate.kafka.protocol.types.TypeName.INT16;
 @ApiKey(ApiKeys.SYNC_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class SyncGroupResponse extends Response {
-    @Type(INT16)
+    @Type(value = INT16, order = 2)
     private Short errorCode;
-    @Type(BYTES)
+    @Type(value = BYTES, order = 3)
     private byte[] memberAssignment;
 }

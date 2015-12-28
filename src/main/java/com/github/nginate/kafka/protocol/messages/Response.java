@@ -7,9 +7,12 @@ import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
 
+/**
+ * Field order starts with 1 because of Message size field
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class Response extends Message implements AnswerableMessage<Integer> {
-    @Type(INT32)
+    @Type(value = INT32, order = 1)
     private Integer correlationId;
 }

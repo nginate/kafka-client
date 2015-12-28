@@ -18,9 +18,9 @@ public class MessageSet {
          */
         @Type(INT64)
         private Long offset;
-        @Type(INT32)
+        @Type(value = INT32, order = 1)
         private Integer messageSize;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 2)
         private Message message;
 
         @Data
@@ -35,24 +35,24 @@ public class MessageSet {
              * This is a version id used to allow backwards compatible evolution of the message binary format.
              * The current value is 0.
              */
-            @Type(INT8)
+            @Type(value = INT8, order = 1)
             private Byte magicByte;
             /**
              * This byte holds metadata attributes about the message. The lowest 2 bits contain the compression codec
              * used for the message. The other bits should be set to 0.
              */
-            @Type(INT8)
+            @Type(value = INT8, order = 2)
             private Byte attributes;
             /**
              * The key is an optional message key that was used for partition assignment. The key can be null.
              */
-            @Type(BYTES)
+            @Type(value = BYTES, order = 3)
             private byte[] key;
             /**
              * The value is the actual message contents as an opaque byte array. Kafka supports recursive messages in
              * which case this may itself contain a message set. The message can be null.
              */
-            @Type(BYTES)
+            @Type(value = BYTES, order = 4)
             private byte[] value;
         }
     }

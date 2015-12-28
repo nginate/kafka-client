@@ -9,9 +9,9 @@ import static java.util.Arrays.stream;
 
 @RequiredArgsConstructor
 public enum ApiVersion {
-    V0(new Version(0,8,1)),
-    V1(new Version(0,8,2)),
-    V2(new Version(0,8,3)),
+    V0(new Version(0, 8, 1)),
+    V1(new Version(0, 8, 2)),
+    V2(new Version(0, 8, 3)),
     UNDEFINED(Version.UNKNOWN_VERSION);
 
     @Getter

@@ -21,10 +21,10 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 @ApiKey(ApiKeys.HEARTBEAT)
 @EqualsAndHashCode(callSuper = true)
 public class HeartbeatRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupId;
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer generationId;
-    @Type(STRING)
+    @Type(value = STRING, order = 6)
     private String memberId;
 }

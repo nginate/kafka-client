@@ -20,8 +20,8 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 @ApiKey(ApiKeys.LEAVE_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class LeaveGroupRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupId;
-    @Type(STRING)
+    @Type(value = STRING, order = 5)
     private String memberId;
 }

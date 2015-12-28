@@ -13,6 +13,15 @@ import static java.util.Arrays.stream;
 public class Version implements Comparable<Version>, Serializable {
 
     public final static Version UNKNOWN_VERSION = new Version(0, 0, 0);
+    private final int majorVersion;
+    private final int minorVersion;
+    private final int patchLevel;
+
+    public Version(int major, int minor, int patch) {
+        majorVersion = major;
+        minorVersion = minor;
+        patchLevel = patch;
+    }
 
     public static Version parse(String value) {
         try {
@@ -26,16 +35,6 @@ public class Version implements Comparable<Version>, Serializable {
             log.warn("Version parsing failed {}", e.getMessage(), e);
             return UNKNOWN_VERSION;
         }
-    }
-
-    private final int majorVersion;
-    private final int minorVersion;
-    private final int patchLevel;
-
-    public Version(int major, int minor, int patch) {
-        majorVersion = major;
-        minorVersion = minor;
-        patchLevel = patch;
     }
 
     @Override

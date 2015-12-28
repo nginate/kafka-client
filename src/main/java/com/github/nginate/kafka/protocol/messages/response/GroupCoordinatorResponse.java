@@ -13,12 +13,12 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.GROUP_COORDINATOR)
 @EqualsAndHashCode(callSuper = true)
 public class GroupCoordinatorResponse extends Response {
-    @Type(INT16)
+    @Type(value = INT16, order = 2)
     private Short errorCode;
-    @Type(INT32)
+    @Type(value = INT32, order = 3)
     private Integer coordinatorId;
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String coordinatorHost;
-    @Type(INT32)
+    @Type(value = INT32, order = 5)
     private Integer coordinatorPort;
 }

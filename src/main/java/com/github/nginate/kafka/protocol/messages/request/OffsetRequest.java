@@ -23,16 +23,16 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.LIST_OFFSETS)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetRequest extends Request {
-    @Type(INT32)
+    @Type(value = INT32, order = 4)
     private Integer replicaId;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 5)
     private OffsetRequestTopicData[] topicData;
 
     @Data
     public static class OffsetRequestTopicData {
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private OffsetRequestPartitionData[] partitionData;
 
         @Data
@@ -45,9 +45,9 @@ public class OffsetRequest extends Request {
              * available offset. Note that because offsets are pulled in descending order, asking for the earliest
              * offset will always return you a single element.
              */
-            @Type(INT64)
+            @Type(value = INT64, order = 1)
             private Long time;
-            @Type(INT32)
+            @Type(value = INT32, order = 2)
             private Integer maxNumberOfOffsets;
         }
     }

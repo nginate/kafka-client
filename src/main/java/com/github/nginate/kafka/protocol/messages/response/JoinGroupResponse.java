@@ -21,24 +21,24 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.JOIN_GROUP)
 @EqualsAndHashCode(callSuper = true)
 public class JoinGroupResponse extends Response {
-    @Type(INT16)
+    @Type(value = INT16, order = 2)
     private Short errorCode;
-    @Type(INT32)
+    @Type(value = INT32, order = 3)
     private Integer generationId;
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupProtocol;
-    @Type(STRING)
+    @Type(value = STRING, order = 5)
     private String leaderId;
-    @Type(STRING)
+    @Type(value = STRING, order = 6)
     private String memberId;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 7)
     private Member[] members;
 
     @Data
-    public static class Member{
+    public static class Member {
         @Type(STRING)
         private String memberId;
-        @Type(BYTES)
+        @Type(value = BYTES, order = 1)
         private byte[] memberMetadata;
     }
 }

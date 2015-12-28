@@ -20,6 +20,6 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 @ApiKey(ApiKeys.GROUP_COORDINATOR)
 @EqualsAndHashCode(callSuper = true)
 public class GroupCoordinatorRequest extends Request {
-    @Type(STRING)
+    @Type(value = STRING, order = 4)
     private String groupId;
 }

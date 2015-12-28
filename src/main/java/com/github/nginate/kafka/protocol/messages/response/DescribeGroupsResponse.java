@@ -13,35 +13,35 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.DESCRIBE_GROUPS)
 @EqualsAndHashCode(callSuper = true)
 public class DescribeGroupsResponse extends Response {
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 2)
     private DescribeGroupsResponseData[] groupData;
 
     @Data
     public static class DescribeGroupsResponseData {
         @Type(INT16)
         private Short errorCode;
-        @Type(STRING)
+        @Type(value = STRING, order = 1)
         private String groupId;
-        @Type(STRING)
+        @Type(value = STRING, order = 2)
         private String state;
-        @Type(STRING)
+        @Type(value = STRING, order = 3)
         private String protocolType;
-        @Type(STRING)
+        @Type(value = STRING, order = 4)
         private String protocol;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 5)
         private DescribeGroupResponseMemberData[] memberData;
 
         @Data
         public static class DescribeGroupResponseMemberData {
             @Type(STRING)
             private String memberId;
-            @Type(STRING)
+            @Type(value = STRING, order = 1)
             private String clientId;
-            @Type(STRING)
+            @Type(value = STRING, order = 2)
             private String clientHost;
-            @Type(BYTES)
+            @Type(value = BYTES, order = 3)
             private byte[] memberMetadata;
-            @Type(BYTES)
+            @Type(value = BYTES, order = 4)
             private byte[] memberAssignment;
         }
     }

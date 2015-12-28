@@ -13,16 +13,16 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.LIST_GROUPS)
 @EqualsAndHashCode(callSuper = true)
 public class ListGroupsResponse extends Response {
-    @Type(INT16)
+    @Type(value = INT16, order = 2)
     private Short errorCode;
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 3)
     private Group[] groups;
 
     @Data
     public static class Group {
         @Type(STRING)
         private String groupId;
-        @Type(STRING)
+        @Type(value = STRING, order = 1)
         private String protocolType;
     }
 }

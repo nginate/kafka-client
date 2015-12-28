@@ -13,23 +13,23 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @ApiKey(ApiKeys.LIST_OFFSETS)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetResponse extends Response {
-    @Type(WRAPPER)
+    @Type(value = WRAPPER, order = 2)
     private OffsetResponseTopicData[] topicData;
 
     @Data
     public static class OffsetResponseTopicData {
         @Type(STRING)
         private String topic;
-        @Type(WRAPPER)
+        @Type(value = WRAPPER, order = 1)
         private PartitionOffsets partitionOffsets;
 
         @Data
         public static class PartitionOffsets {
             @Type(INT32)
             private Integer partition;
-            @Type(INT16)
+            @Type(value = INT16, order = 1)
             private Short errorCode;
-            @Type(INT64)
+            @Type(value = INT64, order = 2)
             private Long[] offsets;
         }
     }
