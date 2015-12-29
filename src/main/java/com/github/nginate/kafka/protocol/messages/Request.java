@@ -4,7 +4,6 @@ import com.github.nginate.kafka.network.AnswerableMessage;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -17,7 +16,6 @@ public abstract class Request extends Message implements AnswerableMessage<Integ
     @Type(value = INT16, order = 1)
     private Short apiVersion;
     @Type(value = INT32, order = 2)
-    @Getter
     private Integer correlationId;
     @Type(value = STRING, order = 3)
     private String clientId;

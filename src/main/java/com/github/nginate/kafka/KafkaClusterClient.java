@@ -6,6 +6,8 @@ import com.github.nginate.kafka.dto.Partition;
 import com.github.nginate.kafka.exceptions.CommunicationException;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
+import com.github.nginate.kafka.protocol.messages.request.TopicMetadataRequest;
+import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,6 +50,10 @@ public class KafkaClusterClient implements Closeable {
     }
 
     private KafkaBrokerClient getClientForCurrentTopicLeader() {
+        return null;
+    }
+
+    public MetadataResponse getTopicMetadata(TopicMetadataRequest request, int timeout) {
         return null;
     }
 }

@@ -41,7 +41,8 @@ public class DockerWrapper {
             // If we already have local container just start it
             Optional<Container> existing = findLocalContainer();
             if (existing.isPresent()) {
-                containerId = existing.get().getId();
+                Container container = existing.get();
+                containerId = container.getId();
             } else {
                 // if we don't have created container check image exists locally
                 if (!localImageExists()) {
@@ -51,10 +52,9 @@ public class DockerWrapper {
                 }
                 CreateContainerCmd containerCmd = createContainer(dockerClient, containerConfiguration);
                 containerId = containerCmd.exec().getId();
+                dockerClient.startContainerCmd(containerId).exec();
+                awaitStarted();
             }
-            dockerClient.startContainerCmd(containerId).exec();
-            awaitStarted();
-
         } else {
             throw new ContainerStateException("Container is already running");
         }
@@ -210,10 +210,11 @@ public class DockerWrapper {
     @Synchronized
     public void purge(){
         if (containerId != null) {
-            dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+            dockerClient.removeContainerCmd(containerId).withRemoveVolumes(true).withForce(true).exec();
             awaitRemoved();
         } else {
-            tryWithLocalContainer(container -> dockerClient.removeContainerCmd(container.getId()).withForce(true));
+            tryWithLocalContainer(container ->
+                    dockerClient.removeContainerCmd(container.getId()).withRemoveVolumes(true).withForce(true));
         }
     }
 
@@ -229,8 +230,24 @@ public class DockerWrapper {
         }
     }
 
+    public String getName() {
+        return Optional.ofNullable(containerConfiguration.getName()).orElseGet(() -> inspect().getName());
+    }
+
+    public String getImageName() {
+        return containerConfiguration.getImage();
+    }
+
+    public String getContainerIp() {
+        return inspect().getNetworkSettings().getIpAddress();
+    }
+
+    public InspectContainerResponse.ContainerState getState() {
+        return inspect().getState();
+    }
+
     private void awaitStopped() {
-        waitUntil(10000, 1000, () -> !inspect(containerId).getState().getFinishedAt().isEmpty());
+        waitUntil(10000, 1000, () -> !inspect().getState().getFinishedAt().isEmpty());
     }
 
     private void awaitRemoved() {
@@ -238,7 +255,7 @@ public class DockerWrapper {
     }
 
     private void awaitStarted() {
-        waitUntil(10000, 1000, () -> inspect(containerId).getState().isRunning());
+        waitUntil(10000, 1000, () -> inspect().getState().isRunning());
     }
 
     private void tryWithLocalContainer(Consumer<Container> consumer) {
@@ -259,7 +276,7 @@ public class DockerWrapper {
         return Optional.of(containers.get(0));
     }
 
-    private InspectContainerResponse inspect(String containerId) {
+    private InspectContainerResponse inspect() {
         return dockerClient.inspectContainerCmd(containerId).exec();
     }
 

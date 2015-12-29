@@ -1,156 +1,172 @@
 package com.github.nginate.kafka.protocol;
 
 import com.github.nginate.kafka.exceptions.SerializationException;
-import com.github.nginate.kafka.protocol.messages.Request;
+import com.github.nginate.kafka.network.BinaryMessageSerializer;
+import com.github.nginate.kafka.network.client.BinaryClientContext;
 import com.github.nginate.kafka.protocol.types.Type;
 import com.github.nginate.kafka.protocol.types.TypeName;
 import com.google.common.base.Charsets;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.apache.commons.beanutils.PropertyUtils;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 import static com.github.nginate.kafka.util.ReflectionUtils.doWithSortedFields;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
+import static com.github.nginate.kafka.util.StringUtils.format;
 import static java.util.stream.IntStream.range;
 
-public class KafkaSerializer {
-    private final Map<TypeName, Function<Object, byte[]>> serializers = new EnumMap<>(TypeName.class);
-    private final Map<TypeName, BiFunction<ByteBuffer, Class<?>, Object>> deserializers = new EnumMap<>(TypeName.class);
+public class KafkaSerializer implements BinaryMessageSerializer {
+    private final Map<TypeName, BiConsumer<ByteBuf, Object>> serializers = new EnumMap<>(TypeName.class);
+    private final Map<TypeName, BiFunction<ByteBuf, Class<?>, Object>> deserializers = new EnumMap<>(TypeName.class);
 
     private final Predicate<Field> fieldFilter = field -> field.isAnnotationPresent(Type.class);
     private final Comparator<Field> comparator = Comparator.comparing(field -> field.getAnnotation(Type.class).order());
 
     {
-        serializers.put(INT8, o -> ByteBuffer.allocate(1).put(Byte.class.cast(o)).array());
-        serializers.put(INT16, o -> ByteBuffer.allocate(2).putShort(Short.class.cast(o)).array());
-        serializers.put(INT32, o -> ByteBuffer.allocate(4).putInt(Integer.class.cast(o)).array());
-        serializers.put(INT64, o -> ByteBuffer.allocate(8).putLong(Long.class.cast(o)).array());
-        serializers.put(STRING, o -> {
-            short size = -1;
-            byte[] data = new byte[0];
+        serializers.put(INT8, (buffer, o) -> buffer.writeByte((byte) Optional.ofNullable(o).orElse((byte) -1)));
+        serializers.put(INT16, (buffer, o) -> buffer.writeShort((short) Optional.ofNullable(o).orElse((short) -1)));
+        serializers.put(INT32, (buffer, o) -> buffer.writeInt((int) Optional.ofNullable(o).orElse(-1)));
+        serializers.put(INT64, (buffer, o) -> buffer.writeLong((long) Optional.ofNullable(o).orElse(-1L)));
+        serializers.put(STRING, (buffer, o) -> {
             if (o != null) {
-                data = String.class.cast(o).getBytes(Charsets.UTF_8);
-                size = (short) data.length;
+                byte[] data = String.class.cast(o).getBytes(Charsets.UTF_8);
+                buffer.writeShort(data.length).writeBytes(data);
+            } else {
+                buffer.writeShort(-1);
             }
-            return ByteBuffer.allocate(data.length + 2).putShort(size).put(data).array();
         });
-        serializers.put(BYTES, o -> {
-            byte[] data = o == null ? new byte[0] : byte[].class.cast(o);
-            int size = data.length == 0 ? -1 : data.length;
-            return ByteBuffer.allocate(data.length + 4).putInt(size).put(data).array();
+        serializers.put(BYTES, (buffer, o) -> {
+            if (o != null) {
+                byte[] data = (byte[]) o;
+                buffer.writeInt(data.length).writeBytes(data);
+            } else {
+                buffer.writeInt(-1);
+            }
         });
-        serializers.put(WRAPPER, this::serialize);
+        serializers.put(WRAPPER, this::serializeObject);
 
-        deserializers.put(INT8, (buffer, clazz) -> buffer.get());
-        deserializers.put(INT16, (buffer, clazz) -> buffer.getShort());
-        deserializers.put(INT32, (buffer, clazz) -> buffer.getInt());
-        deserializers.put(INT64, (buffer, clazz) -> buffer.getLong());
+        deserializers.put(INT8, (buffer, clazz) -> buffer.readByte());
+        deserializers.put(INT16, (buffer, clazz) -> buffer.readShort());
+        deserializers.put(INT32, (buffer, clazz) -> buffer.readInt());
+        deserializers.put(INT64, (buffer, clazz) -> buffer.readLong());
         deserializers.put(STRING, (buffer, clazz) ->  {
-            short size = buffer.getShort();
+            short size = buffer.readShort();
             if (size == -1) {
                 return null;
             } else {
                 byte[] rawString = new byte[size];
-                buffer.get(rawString);
+                buffer.readBytes(rawString);
                 return new String(rawString, Charsets.UTF_8);
             }
         });
         deserializers.put(BYTES, (buffer, clazz) -> {
-            int size = buffer.getInt();
+            int size = buffer.readInt();
             if (size == -1) {
                 return null;
             } else {
                 byte[] array = new byte[size];
-                buffer.get(array);
+                buffer.readBytes(array);
                 return array;
             }
         });
-        deserializers.put(WRAPPER, this::deserialize);
+        deserializers.put(WRAPPER, this::deserializeObject);
     }
 
-    public byte[] serialize(Object message) throws SerializationException {
-        try {
-            List<byte[]> fields = new ArrayList<>();
-            doWithSortedFields(message.getClass(), fieldFilter, comparator, field -> {
-                Type type = field.getAnnotation(Type.class);
-                Function<Object, byte[]> serializer = serializers.get(type.value());
-                Object value = getFieldValue(field, message);
-                if (field.getType().isArray() && value != null) {
-                    List<byte[]> array = stream(Object[].class.cast(value)).map(serializer::apply).collect(toList());
-                    ByteBuffer byteBuffer = ByteBuffer.allocate(array.size() + 4).putInt(array.size());
-                    array.forEach(byteBuffer::put);
-                    fields.add(byteBuffer.array());
-                } else if (field.getType().isArray()) {
-                    fields.add(ByteBuffer.allocate(4).putInt(-1).array()); // TODO check null arrays length
-                } else {
-                    fields.add(serializer.apply(value));
-                }
-            });
-            byte[] apiKeyHeader = buildApiKeyHeader(message);
+    @Override
+    public void serialize(ByteBuf buf, Object message) throws SerializationException {
+        ApiKey apiKeyAnnotation = message.getClass().getAnnotation(ApiKey.class);
 
-            int size = apiKeyHeader.length + fields.stream().map(bytes -> bytes.length).reduce((i, i2) -> i + i2).get();
-            ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-
-            byteBuffer.putInt(size);
-            byteBuffer.put(apiKeyHeader);
-            fields.forEach(byteBuffer::put);
-            return byteBuffer.array();
-        } catch (Exception e) {
-            throw new SerializationException(e.getMessage(), e);
+        if (apiKeyAnnotation == null) {
+            throw new SerializationException(format("Class {} should be annotated with {}",
+                    message.getClass(), ApiKey.class));
         }
+
+        ByteBuf bodyBuffer = Unpooled.buffer();
+        bodyBuffer.writeShort(apiKeyAnnotation.value().getId());
+        serializeObject(bodyBuffer, message);
+        buf.writeInt(bodyBuffer.readableBytes());
+        buf.writeBytes(bodyBuffer);
     }
 
-    private byte[] buildApiKeyHeader(Object message) {
-        if (message instanceof Request) {
-            ApiKey apiKey = message.getClass().getAnnotation(ApiKey.class);
-            return ByteBuffer.allocate(2).putShort(apiKey.value().getId()).array();
-        } else {
-            return new byte[0];
-        }
+    @Override
+    public Object deserialize(ByteBuf buf, BinaryClientContext clientContext) throws SerializationException {
+        buf.readInt();
+        int correlationId = buf.getInt(4);
+
+        Class<?> clazz = clientContext.getResponseType(correlationId)
+                .orElseThrow(() -> new SerializationException("Unexpected response packet"));
+
+        return deserializeObject(buf, clazz);
     }
 
-    private Object getFieldValue(Field field, Object bean) {
+    private Object deserializeObject(ByteBuf buf, Class<?> clazz) {
         try {
-            return field.get(bean);
-        } catch (IllegalAccessException e) {
-            throw new SerializationException(e.getMessage(), e);
-        }
-    }
-
-    public <RS> Object deserialize(ByteBuffer buf, Class<RS> clazz) throws SerializationException {
-        try {
-            RS response = clazz.newInstance();
-            doWithSortedFields(clazz, fieldFilter, comparator, field -> {
-                Type type = field.getAnnotation(Type.class);
-                BiFunction<ByteBuffer, Class<?>, Object> deserializer = deserializers.get(type.value());
-                if (field.getType().isArray()) {
-                    int size = buf.getInt();
-                    if (size != -1) {
-                        Object[] value = range(0, size).mapToObj(value1 -> deserializer.apply(buf, clazz)).toArray();
-                        setField(response, field, value);
-                    }
-                } else {
-                    Object value = deserializer.apply(buf, clazz);
-                    setField(response, field, value);
-                }
-            });
+            Object response = clazz.newInstance();
+            doWithSortedFields(clazz, fieldFilter, comparator, field -> readField(field, response, buf));
             return response;
         } catch (InstantiationException | IllegalAccessException e) {
             throw new SerializationException(e.getMessage(), e);
         }
     }
 
-    private <RS> void setField(RS response, Field field, Object value) {
+    private void readField(Field field, Object response, ByteBuf buf) {
         try {
-            field.set(response, value);
-        } catch (IllegalAccessException e) {
-            throw new SerializationException(e.getMessage(), e);
+            Class<?> clazz = field.getDeclaringClass();
+            Type type = field.getAnnotation(Type.class);
+            BiFunction<ByteBuf, Class<?>, Object> deserializer = deserializers.get(type.value());
+            Object value = null;
+            if (type.value() != BYTES && field.getType().isArray()) {
+                int arraySize = buf.readInt();
+                if (arraySize != -1) {
+                    value = range(0, arraySize)
+                            .mapToObj(i -> deserializer.apply(buf, field.getType().getComponentType()))
+                            .toArray(i -> (Object[]) Array.newInstance(field.getType().getComponentType(), arraySize));
+                }
+            } else {
+                value = deserializer.apply(buf, clazz);
+            }
+            PropertyUtils.setProperty(response, field.getName(), value);
+        } catch (Exception e) {
+            throw new SerializationException("Can't deserialize field " + field.getName(), e);
+        }
+    }
+
+
+    private void serializeObject(ByteBuf bodyBuffer, Object message) {
+        doWithSortedFields(message.getClass(), fieldFilter, comparator,
+                field -> writeField(field, message, bodyBuffer));
+    }
+
+    private void writeField(Field field, Object message, ByteBuf buf) {
+        try {
+            Type type = field.getAnnotation(Type.class);
+            BiConsumer<ByteBuf, Object> serializer = serializers.get(type.value());
+            Object value = PropertyUtils.getProperty(message, field.getName());
+            if (type.value() != BYTES && field.getType().isArray()) {
+                if (value != null) {
+                    Object[] array = Object[].class.cast(value);
+                    buf.writeInt(array.length);
+                    for (Object obj : array) {
+                        serializer.accept(buf, obj);
+                    }
+                } else {
+                    buf.writeInt(-1);
+                }
+            } else {
+                serializer.accept(buf, value);
+            }
+        } catch (Exception e) {
+            throw new SerializationException("Can't serialize field " + field.getName(), e);
         }
     }
 }

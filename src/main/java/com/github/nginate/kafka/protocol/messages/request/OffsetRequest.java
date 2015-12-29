@@ -4,7 +4,6 @@ import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -19,7 +18,6 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  * this API is slightly funky.
  */
 @Data
-@Builder
 @ApiKey(ApiKeys.LIST_OFFSETS)
 @EqualsAndHashCode(callSuper = true)
 public class OffsetRequest extends Request {

@@ -1,6 +1,7 @@
 package com.github.nginate.kafka.util;
 
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 import java.lang.reflect.Field;
 import java.util.Comparator;
@@ -13,7 +14,7 @@ import static java.util.Arrays.stream;
 public final class ReflectionUtils {
 
     public static void doWithFields(Class<?> clazz, Predicate<Field> filter, Consumer<Field> callback) {
-        stream(clazz.getDeclaredFields()).filter(filter).forEach(field -> {
+        stream(FieldUtils.getAllFields(clazz)).filter(filter).forEach(field -> {
             field.setAccessible(true);
             callback.accept(field);
         });
@@ -21,7 +22,7 @@ public final class ReflectionUtils {
 
     public static void doWithSortedFields(Class<?> clazz, Predicate<Field> filter, Comparator<? super Field> comparator,
                                           Consumer<Field> callback) {
-        stream(clazz.getDeclaredFields()).filter(filter).sorted(comparator).forEach(field -> {
+        stream(FieldUtils.getAllFields(clazz)).filter(filter).sorted(comparator).forEachOrdered(field -> {
             field.setAccessible(true);
             callback.accept(field);
         });

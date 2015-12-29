@@ -14,21 +14,25 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
+@ThreadSafe
 public class BinaryTcpClient {
 
     private final Map<Object, CompletableFuture<AnswerableMessage>> responseMap = new ConcurrentHashMap<>();
 	private final EventLoopGroup workerGroup;
     private final BinaryTcpClientConfig config;
+    private final BinaryClientContext context = new BinaryClientContext();
 
     private ChannelFuture channelFuture;
 	private final Bootstrap bootstrap;
-    private volatile boolean connected;
+    private volatile AtomicBoolean connected = new AtomicBoolean();
 
 	public BinaryTcpClient(BinaryTcpClientConfig config) {
         this.config = config;
@@ -44,8 +48,8 @@ public class BinaryTcpClient {
 				.handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					public void initChannel(SocketChannel ch) throws Exception {
-						ch.pipeline().addLast(new BinaryMessageDecoder(config.getSerializer()),
-								new BinaryMessageEncoder(config.getSerializer()),
+                        ch.pipeline().addLast(new BinaryMessageDecoder(config.getSerializer(), context),
+                                new BinaryMessageEncoder(config.getSerializer()),
                                 new BinaryTcpClientHandler(BinaryTcpClient.this));
 					}
 				});
@@ -54,17 +58,10 @@ public class BinaryTcpClient {
 	}
 
 	public void connect() {
-        try {
-            tryConnect();
-        } catch (Exception e) {
-            log.error("Not connected to server", e);
-            onDisconnect();
+        if (connected.compareAndSet(false, true)) {
+            channelFuture = bootstrap.connect(config.getHost(), config.getPort());
+            channelFuture.syncUninterruptibly();
         }
-    }
-
-    private void tryConnect() {
-        channelFuture = bootstrap.connect(config.getHost(), config.getPort()).syncUninterruptibly();
-        connected = true;
     }
 
     public void send(Object message) {
@@ -72,16 +69,18 @@ public class BinaryTcpClient {
         channelFuture.channel().writeAndFlush(message);
 	}
 
-    public CompletableFuture<AnswerableMessage> request(AnswerableMessage message) {
+    public <T extends AnswerableMessage> CompletableFuture<AnswerableMessage> request(AnswerableMessage message,
+                                                                                      Class<T> responseType) {
         checkConnection();
         CompletableFuture<AnswerableMessage> responseFuture = new CompletableFuture<>();
-		responseMap.put(message.getCorrelationId(), responseFuture);
+        context.addResponseType(message.getCorrelationId(), responseType);
+        responseMap.put(message.getCorrelationId(), responseFuture);
 		send(message);
 		return responseFuture;
 	}
 
     private void checkConnection() {
-        if (!connected) {
+        if (!connected.get()) {
             throw new ConnectionException("Connection is not alive");
         }
     }
@@ -90,24 +89,28 @@ public class BinaryTcpClient {
         if (message instanceof AnswerableMessage) {
             AnswerableMessage answerableMessage = (AnswerableMessage) message;
 
+            context.removeMetadata(answerableMessage.getCorrelationId());
             CompletableFuture<AnswerableMessage> responseFuture =
                     responseMap.remove(answerableMessage.getCorrelationId());
             if (responseFuture != null) {
                 responseFuture.complete(answerableMessage);
+            } else {
+                log.warn("Dead message {}", message);
             }
+        } else {
+            log.warn("Wrong message {}", message);
         }
-        log.warn("Dead message {}" + message);
 	}
 
     void onDisconnect() {
-        connected = false;
+        connected.set(false);
         log.info("Reconnecting...");
-        channelFuture.channel().eventLoop().schedule(this::tryConnect, 1000, TimeUnit.MILLISECONDS);
+        channelFuture.channel().eventLoop().schedule(this::connect, 1000, TimeUnit.MILLISECONDS);
     }
 
 	void onException(Throwable cause) {
-        log.info("Reconnecting...");
-	}
+        log.error("Unexpected exception from channel", cause);
+    }
 
 	public void close() {
 		channelFuture.channel().closeFuture().syncUninterruptibly();

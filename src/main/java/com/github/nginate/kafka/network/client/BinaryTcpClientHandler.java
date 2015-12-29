@@ -5,8 +5,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
-
 @Slf4j
 @RequiredArgsConstructor
 public class BinaryTcpClientHandler extends ChannelInboundHandlerAdapter {
@@ -15,8 +13,9 @@ public class BinaryTcpClientHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (log.isTraceEnabled()) {
-            log.trace("Received message {}" + msg);
+            log.trace("Received message {}", msg);
         }
+        log.debug("Received message {}", msg);
         client.onMessage(msg);
 	}
 
@@ -29,13 +28,12 @@ public class BinaryTcpClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         log.debug("Disconnected from {}", ctx.channel().remoteAddress());
-        ctx.channel().eventLoop().schedule(client::connect, 1L, TimeUnit.SECONDS);
+        client.onDisconnect();
         super.channelInactive(ctx);
     }
 
     @Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        ctx.close();
         client.onException(cause);
 	}
 }
