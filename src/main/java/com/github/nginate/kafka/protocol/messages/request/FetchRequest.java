@@ -2,11 +2,9 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -32,8 +30,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Data
 @Builder
 @ApiKey(ApiKeys.FETCH)
-@EqualsAndHashCode(callSuper = true)
-public class FetchRequest extends Request {
+public class FetchRequest {
     /**
      * The replica id indicates the node id of the replica initiating this request. Normal client consumers should
      * always specify this as -1 as they have no node id. Other brokers set this to be their own node id. The value -2

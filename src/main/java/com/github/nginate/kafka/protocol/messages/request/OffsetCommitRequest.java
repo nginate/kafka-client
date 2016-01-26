@@ -3,12 +3,10 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.ApiVersion;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Versioned;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -34,8 +32,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Data
 @Builder
 @ApiKey(ApiKeys.OFFSET_COMMIT)
-@EqualsAndHashCode(callSuper = true)
-public class OffsetCommitRequest extends Request {
+public class OffsetCommitRequest {
     @Type(value = STRING, order = 4)
     private String consumerGroupId;
     @Type(value = INT32, order = 5)

@@ -2,11 +2,9 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
 import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
@@ -19,8 +17,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 @Data
 @Builder
 @ApiKey(ApiKeys.HEARTBEAT)
-@EqualsAndHashCode(callSuper = true)
-public class HeartbeatRequest extends Request {
+public class HeartbeatRequest {
     @Type(value = STRING, order = 4)
     private String groupId;
     @Type(value = INT32, order = 5)

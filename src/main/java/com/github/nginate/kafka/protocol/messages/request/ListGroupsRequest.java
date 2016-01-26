@@ -2,10 +2,8 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * This API can be used to find the current groups managed by a broker. To get a list of all groups in the cluster, you
@@ -14,6 +12,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @ApiKey(ApiKeys.LIST_GROUPS)
-@EqualsAndHashCode(callSuper = true)
-public class ListGroupsRequest extends Request {
+public class ListGroupsRequest {
 }

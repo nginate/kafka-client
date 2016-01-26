@@ -2,11 +2,9 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -18,8 +16,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Data
 @Builder
 @ApiKey(ApiKeys.OFFSET_FETCH)
-@EqualsAndHashCode(callSuper = true)
-public class OffsetFetchRequest extends Request {
+public class OffsetFetchRequest {
     @Type(value = STRING, order = 4)
     private String consumerGroup;
     @Type(value = WRAPPER, order = 5)

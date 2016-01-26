@@ -2,17 +2,14 @@ package com.github.nginate.kafka.protocol.messages.response;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
 @Data
 @ApiKey(ApiKeys.PRODUCE)
-@EqualsAndHashCode(callSuper = true)
-public class ProduceResponse extends Response {
+public class ProduceResponse {
     @Type(value = WRAPPER, order = 2)
     private ProduceResponseData[] produceResponseData;
 

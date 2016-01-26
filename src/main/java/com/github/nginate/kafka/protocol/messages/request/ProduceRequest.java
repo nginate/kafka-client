@@ -3,11 +3,9 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -20,8 +18,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Data
 @Builder
 @ApiKey(ApiKeys.PRODUCE)
-@EqualsAndHashCode(callSuper = true)
-public class ProduceRequest extends Request {
+public class ProduceRequest {
     /**
      * This field indicates how many acknowledgements the servers should receive before responding to the request.
      * If it is 0 the server will not send any response (this is the only case where the server will not reply to a

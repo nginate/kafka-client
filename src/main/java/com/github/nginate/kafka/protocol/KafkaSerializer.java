@@ -3,6 +3,9 @@ package com.github.nginate.kafka.protocol;
 import com.github.nginate.kafka.exceptions.SerializationException;
 import com.github.nginate.kafka.network.BinaryMessageSerializer;
 import com.github.nginate.kafka.network.client.BinaryClientContext;
+import com.github.nginate.kafka.network.client.BinaryMessageMetadata;
+import com.github.nginate.kafka.protocol.messages.Request;
+import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.types.Type;
 import com.github.nginate.kafka.protocol.types.TypeName;
 import com.google.common.base.Charsets;
@@ -84,16 +87,20 @@ public class KafkaSerializer implements BinaryMessageSerializer {
 
     @Override
     public void serialize(ByteBuf buf, Object message) throws SerializationException {
-        ApiKey apiKeyAnnotation = message.getClass().getAnnotation(ApiKey.class);
+        Request request = (Request) message;
+        Object requestMessage = request.getMessage();
+
+        ApiKey apiKeyAnnotation = requestMessage.getClass().getAnnotation(ApiKey.class);
 
         if (apiKeyAnnotation == null) {
             throw new SerializationException(format("Class {} should be annotated with {}",
-                    message.getClass(), ApiKey.class));
+                    requestMessage.getClass(), ApiKey.class));
         }
 
         ByteBuf bodyBuffer = Unpooled.buffer();
         bodyBuffer.writeShort(apiKeyAnnotation.value().getId());
         serializeObject(bodyBuffer, message);
+        serializeObject(bodyBuffer, requestMessage);
         buf.writeInt(bodyBuffer.readableBytes());
         buf.writeBytes(bodyBuffer);
     }
@@ -103,15 +110,18 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         buf.readInt();
         int correlationId = buf.getInt(4);
 
-        Class<?> clazz = clientContext.getResponseType(correlationId)
+        Class<?> clazz = clientContext.getMetadata(correlationId)
+                .map(BinaryMessageMetadata::getResponseType)
                 .orElseThrow(() -> new SerializationException("Unexpected response packet"));
 
-        return deserializeObject(buf, clazz);
+        Response response = deserializeObject(buf, Response.class);
+        response.setMessage(deserializeObject(buf, clazz));
+        return response;
     }
 
-    private Object deserializeObject(ByteBuf buf, Class<?> clazz) {
+    private <T> T deserializeObject(ByteBuf buf, Class<T> clazz) {
         try {
-            Object response = clazz.newInstance();
+            T response = clazz.newInstance();
             doWithSortedFields(clazz, fieldFilter, comparator, field -> readField(field, response, buf));
             return response;
         } catch (InstantiationException | IllegalAccessException e) {

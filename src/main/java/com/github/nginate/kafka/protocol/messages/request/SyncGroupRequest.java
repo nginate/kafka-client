@@ -2,11 +2,9 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -22,8 +20,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Data
 @Builder
 @ApiKey(ApiKeys.SYNC_GROUP)
-@EqualsAndHashCode(callSuper = true)
-public class SyncGroupRequest extends Request {
+public class SyncGroupRequest {
     @Type(value = STRING, order = 4)
     private String groupId;
     @Type(value = INT32, order = 5)

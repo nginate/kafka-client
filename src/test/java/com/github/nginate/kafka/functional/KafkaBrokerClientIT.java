@@ -1,11 +1,14 @@
 package com.github.nginate.kafka.functional;
 
 import com.github.nginate.kafka.core.KafkaBrokerClient;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.request.TopicMetadataRequest;
 import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,15 +23,20 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         client.connect();
     }
 
-    @Test
-    public void testTopicMetadataPingPong() throws Exception {
-        TopicMetadataRequest request = TopicMetadataRequest.builder()
-                .topic(new String[]{"abc"})
-                .build();
-        request.setCorrelationId(2);
-        request.setApiVersion(ApiKeys.METADATA.getId());
-        request.setClientId("4");
-        MetadataResponse response = client.sendAndReceive(request, MetadataResponse.class).join();
+    /*@Test
+    public void testDescribeGroupsRequest() throws Exception {
+        DescribeGroupsResponse response = await(client.describeGroups());
         assertThat(response).isNotNull();
+    }*/
+
+    @Test
+    public void testTopicMetadataRequest() throws Exception {
+        MetadataResponse response = await(client.topicMetadata("abc"));
+        assertThat(response).isNotNull();
+    }
+
+    private <T> T await(CompletableFuture<T> completableFuture)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        return completableFuture.get(5000, TimeUnit.MILLISECONDS);
     }
 }

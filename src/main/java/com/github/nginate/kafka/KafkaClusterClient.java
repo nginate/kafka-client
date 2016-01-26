@@ -3,9 +3,6 @@ package com.github.nginate.kafka;
 import com.github.nginate.kafka.core.ClusterMetadata;
 import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.dto.Partition;
-import com.github.nginate.kafka.exceptions.CommunicationException;
-import com.github.nginate.kafka.protocol.messages.Request;
-import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.messages.request.TopicMetadataRequest;
 import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +12,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,10 +35,10 @@ public class KafkaClusterClient implements Closeable {
         return null;
     }
 
-    public <T extends Response> CompletableFuture<T> sendAndReceive(Request request, Class<T> responseClass)
+    /*public <T extends Response> CompletableFuture<T> sendAndReceive(Request request, Class<T> responseClass)
             throws CommunicationException {
         return getClientForCurrentTopicLeader().sendAndReceive(request, responseClass);
-    }
+    }*/
 
     @Override
     public void close() throws IOException {

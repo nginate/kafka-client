@@ -8,17 +8,21 @@ import java.util.Optional;
 
 @ThreadSafe
 public class BinaryClientContext {
-    private final Map<Object, Class<?>> responseTypeMap = Maps.newConcurrentMap();
+    private final Map<Object, BinaryMessageMetadata> responseTypeMap = Maps.newConcurrentMap();
 
-    public Optional<Class<?>> getResponseType(Object correlationId) {
+    public Optional<BinaryMessageMetadata> getMetadata(Object correlationId) {
         return Optional.ofNullable(responseTypeMap.get(correlationId));
     }
 
-    public Optional<Class<?>> removeMetadata(Object correlationId) {
+    public Optional<BinaryMessageMetadata> removeMetadata(Object correlationId) {
         return Optional.ofNullable(responseTypeMap.remove(correlationId));
     }
 
-    public void addResponseType(Object correlationId, Class<?> responseClass) {
-        responseTypeMap.put(correlationId, responseClass);
+    public void addMetadata(Object correlationId, BinaryMessageMetadata metadata) {
+        responseTypeMap.put(correlationId, metadata);
+    }
+
+    public void clear() {
+        responseTypeMap.clear();
     }
 }

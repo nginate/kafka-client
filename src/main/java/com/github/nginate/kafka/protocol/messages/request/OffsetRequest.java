@@ -2,10 +2,8 @@ package com.github.nginate.kafka.protocol.messages.request;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
@@ -19,8 +17,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @ApiKey(ApiKeys.LIST_OFFSETS)
-@EqualsAndHashCode(callSuper = true)
-public class OffsetRequest extends Request {
+public class OffsetRequest {
     @Type(value = INT32, order = 4)
     private Integer replicaId;
     @Type(value = WRAPPER, order = 5)

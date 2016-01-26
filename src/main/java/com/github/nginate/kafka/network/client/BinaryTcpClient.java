@@ -59,8 +59,7 @@ public class BinaryTcpClient {
 
 	public void connect() {
         if (connected.compareAndSet(false, true)) {
-            channelFuture = bootstrap.connect(config.getHost(), config.getPort());
-            channelFuture.syncUninterruptibly();
+            tryConnect();
         }
     }
 
@@ -69,15 +68,20 @@ public class BinaryTcpClient {
         channelFuture.channel().writeAndFlush(message);
 	}
 
-    public <T extends AnswerableMessage> CompletableFuture<AnswerableMessage> request(AnswerableMessage message,
-                                                                                      Class<T> responseType) {
+    public <T> CompletableFuture<T> request(AnswerableMessage message, Class<T> responseType,
+                                            BinaryMessageMetadata messageMetadata) {
         checkConnection();
         CompletableFuture<AnswerableMessage> responseFuture = new CompletableFuture<>();
-        context.addResponseType(message.getCorrelationId(), responseType);
+        context.addMetadata(message.getCorrelationId(), messageMetadata);
         responseMap.put(message.getCorrelationId(), responseFuture);
 		send(message);
-		return responseFuture;
-	}
+        return responseFuture.thenApply(responseType::cast);
+    }
+
+    private void tryConnect() {
+        channelFuture = bootstrap.connect(config.getHost(), config.getPort());
+        channelFuture.syncUninterruptibly();
+    }
 
     private void checkConnection() {
         if (!connected.get()) {
@@ -103,9 +107,8 @@ public class BinaryTcpClient {
 	}
 
     void onDisconnect() {
-        connected.set(false);
         log.info("Reconnecting...");
-        channelFuture.channel().eventLoop().schedule(this::connect, 1000, TimeUnit.MILLISECONDS);
+        channelFuture.channel().eventLoop().schedule(this::tryConnect, 1000, TimeUnit.MILLISECONDS);
     }
 
 	void onException(Throwable cause) {
@@ -113,7 +116,9 @@ public class BinaryTcpClient {
     }
 
 	public void close() {
-		channelFuture.channel().closeFuture().syncUninterruptibly();
-		workerGroup.shutdownGracefully().syncUninterruptibly();
+        responseMap.clear();
+        context.clear();
+        channelFuture.channel().closeFuture().syncUninterruptibly();
+        workerGroup.shutdownGracefully().syncUninterruptibly();
 	}
 }
