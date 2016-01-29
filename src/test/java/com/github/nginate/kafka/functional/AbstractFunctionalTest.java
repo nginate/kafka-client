@@ -33,7 +33,7 @@ public abstract class AbstractFunctionalTest {
     @BeforeClass
     public void initDockerContainer() throws Exception {
         DockerClient dockerClient = DockerClientBuilder.getInstance(testProperties.getDockerUrl()).build();
-        kafkaContainer = new DockerWrapper(dockerClient, kafkaContainerConfiguration());
+        kafkaContainer = new DockerWrapper(dockerClient, kafkaContainerConfiguration(testProperties.getKafkaPort()));
         kafkaContainer.start();
         Thread.sleep(5000);
     }

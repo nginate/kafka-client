@@ -13,18 +13,16 @@ import java.net.URL;
 
 @UtilityClass
 public final class DockerConfigs {
-
     private static final int ZOOKEEPER_PORT = 2181;
-    private static final Integer KAFKA_PORT = 9092;
 
-    public static ContainerConfig kafkaContainerConfiguration() {
+    public static ContainerConfig kafkaContainerConfiguration(Integer kafkaPort) {
         return ContainerConfig.builder()
                 .image("spotify/kafka")
                 .name("kafka-bundle")
                 .exposedPort(ExposedPort.tcp(ZOOKEEPER_PORT))
-                .exposedPort(ExposedPort.tcp(KAFKA_PORT))
-                .oneToOnePortBindings(ZOOKEEPER_PORT, KAFKA_PORT)
-                .env("ADVERTISED_PORT", KAFKA_PORT.toString())
+                .exposedPort(ExposedPort.tcp(kafkaPort))
+                .oneToOnePortBindings(ZOOKEEPER_PORT, kafkaPort)
+                .env("ADVERTISED_PORT", kafkaPort.toString())
                 .env("ADVERTISED_HOST", getHostIp())
                 .env("KAFKA_HEAP_OPTS", "-Xmx256M -Xms128M")
                 .logConfig(new LogConfig(LogConfig.LoggingType.DEFAULT))
