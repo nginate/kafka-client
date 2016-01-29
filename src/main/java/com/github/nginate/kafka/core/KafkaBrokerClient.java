@@ -8,10 +8,8 @@ import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaSerializer;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
-import com.github.nginate.kafka.protocol.messages.request.DescribeGroupsRequest;
-import com.github.nginate.kafka.protocol.messages.request.TopicMetadataRequest;
-import com.github.nginate.kafka.protocol.messages.response.DescribeGroupsResponse;
-import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
+import com.github.nginate.kafka.protocol.messages.request.*;
+import com.github.nginate.kafka.protocol.messages.response.*;
 
 import java.io.Closeable;
 import java.util.UUID;
@@ -44,6 +42,52 @@ public class KafkaBrokerClient implements Closeable {
     public CompletableFuture<DescribeGroupsResponse> describeGroups(String... groupIds) {
         DescribeGroupsRequest request = DescribeGroupsRequest.builder().groupIds(groupIds).build();
         return sendAndReceive(request, DescribeGroupsResponse.class);
+    }
+
+    public CompletableFuture<FetchResponse> fetch(FetchRequest request) {
+        return sendAndReceive(request, FetchResponse.class);
+    }
+
+    public CompletableFuture<GroupCoordinatorResponse> getGroupCoordinator(String groupId) {
+        GroupCoordinatorRequest request = GroupCoordinatorRequest.builder().groupId(groupId).build();
+        return sendAndReceive(request, GroupCoordinatorResponse.class);
+    }
+
+    public CompletableFuture<HeartbeatResponse> checkHeartbeat(HeartbeatRequest request) {
+        return sendAndReceive(request, HeartbeatResponse.class);
+    }
+
+    public CompletableFuture<JoinGroupResponse> joinGroup(JoinGroupRequest request) {
+        return sendAndReceive(request, JoinGroupResponse.class);
+    }
+
+    public CompletableFuture<LeaveGroupResponse> leaveGroup(LeaveGroupRequest request) {
+        return sendAndReceive(request, LeaveGroupResponse.class);
+    }
+
+    public CompletableFuture<ListGroupsResponse> listGroups() {
+        ListGroupsRequest request = ListGroupsRequest.builder().build();
+        return sendAndReceive(request, ListGroupsResponse.class);
+    }
+
+    public CompletableFuture<OffsetCommitResponse> commitOffset(OffsetCommitRequest request) {
+        return sendAndReceive(request, OffsetCommitResponse.class);
+    }
+
+    public CompletableFuture<OffsetFetchResponse> fetchOffset(OffsetFetchRequest request) {
+        return sendAndReceive(request, OffsetFetchResponse.class);
+    }
+
+    public CompletableFuture<OffsetResponse> getOffset(OffsetRequest request) {
+        return sendAndReceive(request, OffsetResponse.class);
+    }
+
+    public CompletableFuture<ProduceResponse> produce(ProduceRequest request) {
+        return sendAndReceive(request, ProduceResponse.class);
+    }
+
+    public CompletableFuture<SyncGroupResponse> syncGroup(SyncGroupRequest request) {
+        return sendAndReceive(request, SyncGroupResponse.class);
     }
 
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)
