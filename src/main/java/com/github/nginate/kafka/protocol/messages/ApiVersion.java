@@ -1,13 +1,11 @@
 package com.github.nginate.kafka.protocol.messages;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
 import static java.util.Arrays.stream;
 
-@RequiredArgsConstructor
 public enum ApiVersion {
     V0(new Version(0, 8, 1)),
     V1(new Version(0, 8, 2)),
@@ -16,6 +14,10 @@ public enum ApiVersion {
 
     @Getter
     private final Version since;
+
+    ApiVersion(Version since) {
+        this.since = since;
+    }
 
     public static ApiVersion from(Version version) {
         Optional<ApiVersion> first = stream(ApiVersion.values())

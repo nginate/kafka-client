@@ -1,11 +1,8 @@
 package com.github.nginate.kafka.protocol;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public enum ApiKeys {
     /**
      * The produce API is used to send message sets to the server. For efficiency it allows sending message sets
@@ -101,4 +98,8 @@ public enum ApiKeys {
     LIST_GROUPS((short)16);
 
     private final short id;
+
+    ApiKeys(short id) {
+        this.id = id;
+    }
 }
