@@ -3,6 +3,7 @@ package com.github.nginate.kafka.functional;
 import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.protocol.messages.response.DescribeGroupsResponse;
 import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -22,6 +23,11 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
     public void prepareClient() throws Exception {
         client = new KafkaBrokerClient(getTestProperties().getKafkaHost(), getTestProperties().getKafkaPort());
         client.connect();
+    }
+
+    @AfterMethod
+    public void tearDownClient() throws Exception {
+        client.close();
     }
 
     @Test

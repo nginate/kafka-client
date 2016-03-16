@@ -3,10 +3,12 @@ package com.github.nginate.kafka.functional;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.nginate.kafka.TestProperties;
+import com.github.nginate.kafka.docker.DockerContainer;
 import com.github.nginate.kafka.docker.DockerWrapper;
 import com.google.common.collect.Maps;
 import lombok.Getter;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.io.FileUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
@@ -20,7 +22,7 @@ import static com.github.nginate.kafka.docker.DockerConfigs.kafkaContainerConfig
 
 public abstract class AbstractFunctionalTest {
 
-    private DockerWrapper kafkaContainer;
+    private DockerContainer kafkaContainer;
     @Getter
     private TestProperties testProperties;
 
@@ -33,14 +35,21 @@ public abstract class AbstractFunctionalTest {
     @BeforeClass
     public void initDockerContainer() throws Exception {
         DockerClient dockerClient = DockerClientBuilder.getInstance(testProperties.getDockerUrl()).build();
-        kafkaContainer = new DockerWrapper(dockerClient, kafkaContainerConfiguration(testProperties.getKafkaPort()));
+        kafkaContainer = new DockerWrapper.Builder()
+                .dockerClient(dockerClient)
+                .containerConfiguration(kafkaContainerConfiguration(testProperties.getKafkaPort()))
+                .useSlf4jInfoLogging()
+                .build();
+        kafkaContainer.pullImage();
+        kafkaContainer.create();
         kafkaContainer.start();
-        Thread.sleep(5000);
     }
 
     @AfterClass(alwaysRun = true)
     public void tearDownDockerContainer() throws Exception {
-        kafkaContainer.purge();
+        kafkaContainer.forceStop();
+        kafkaContainer.printLogs();
+        kafkaContainer.remove();
     }
 
     private void populateProperties(Object bean, String propertiesFileName) throws IOException, IllegalAccessException, InvocationTargetException {
@@ -50,7 +59,7 @@ public abstract class AbstractFunctionalTest {
 
     private Properties loadProperties(String fileName) throws IOException {
         Properties properties = new Properties();
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(fileName)) {
+        try (InputStream in = FileUtils.openInputStream(FileUtils.getFile("src","test", "resources", fileName))) {
             properties.load(in);
         }
         return properties;
