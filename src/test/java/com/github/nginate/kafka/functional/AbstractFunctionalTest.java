@@ -21,7 +21,7 @@ import java.util.Properties;
 import static com.github.nginate.kafka.docker.DockerConfigs.kafkaContainerConfiguration;
 
 public abstract class AbstractFunctionalTest {
-
+    @Getter
     private DockerContainer kafkaContainer;
     @Getter
     private TestProperties testProperties;
