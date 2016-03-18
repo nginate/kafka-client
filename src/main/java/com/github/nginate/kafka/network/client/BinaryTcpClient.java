@@ -4,6 +4,7 @@ import com.github.nginate.kafka.exceptions.ConnectionException;
 import com.github.nginate.kafka.network.AnswerableMessage;
 import com.github.nginate.kafka.network.BinaryMessageDecoder;
 import com.github.nginate.kafka.network.BinaryMessageEncoder;
+import com.google.common.base.Throwables;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -116,9 +117,13 @@ public class BinaryTcpClient {
     }
 
 	public void close() {
-        responseMap.clear();
-        context.clear();
-        channelFuture.channel().closeFuture().syncUninterruptibly();
-        workerGroup.shutdownGracefully().syncUninterruptibly();
-	}
+        try {
+            responseMap.clear();
+            context.clear();
+            channelFuture.channel().close().sync().await(1000, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully().sync().await(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 }
