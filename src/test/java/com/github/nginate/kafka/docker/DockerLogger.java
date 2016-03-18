@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.function.Consumer;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.chomp;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @RequiredArgsConstructor
 public class DockerLogger extends ResultCallbackTemplate<DockerLogger, Frame> {
@@ -15,7 +17,10 @@ public class DockerLogger extends ResultCallbackTemplate<DockerLogger, Frame> {
 
     @Override
     public void onNext(Frame object) {
-        logEntryConsumer.accept(new String(object.getPayload(), UTF_8));
+        String entry = chomp(new String(object.getPayload(), UTF_8));
+        if (isNotBlank(entry)) {
+            logEntryConsumer.accept(entry);
+        }
     }
 
     @Override
