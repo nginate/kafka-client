@@ -94,18 +94,25 @@ public class DockerWrapper implements DockerContainer {
 
     @Override
     public void printLogs() {
+        log.info("\n\nContainer logs start for {} \n\n", containerConfiguration.getName());
         dockerClient.logContainerCmd(containerId)
                 .withStdOut()
                 .withStdErr()
                 .withFollowStream()
                 .exec(new DockerLogger(logConsumer))
                 .awaitCompletion();
+        log.info("\n\nContainer logs end for {} \n\n", containerConfiguration.getName());
     }
 
     @Override
     public <T> T fromContainerInfo(Function<InspectContainerResponse, T> resultExtractor) {
         checkContainerExists();
         return resultExtractor.apply(dockerClient.inspectContainerCmd(containerId).exec());
+    }
+
+    @Override
+    public String getIp() {
+        return fromContainerInfo(response -> response.getNetworkSettings().getIpAddress());
     }
 
     private void checkState(Predicate<InspectContainerResponse.ContainerState> statePredicate) {

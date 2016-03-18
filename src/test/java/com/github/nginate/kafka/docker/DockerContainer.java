@@ -64,4 +64,10 @@ public interface DockerContainer {
      * @return extracted result
      */
     <T> T fromContainerInfo(Function<InspectContainerResponse, T> resultExtractor);
+
+    /**
+     * Most common docker container info, requested from docker info - ip address for dicrect communication
+     * @return container ip
+     */
+    String getIp();
 }
