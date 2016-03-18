@@ -20,7 +20,7 @@ public final class WaitUtil {
         long start = currentTimeMillis();
         try {
             while (!condition.get()) {
-                Thread.sleep(waitMillis);
+                Thread.sleep(waitStepMillis);
                 if (currentTimeMillis() - start >= waitMillis) {
                     throw new KafkaTimeoutException(failureMessage);
                 }
