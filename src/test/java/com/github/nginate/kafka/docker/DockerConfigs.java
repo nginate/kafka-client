@@ -3,19 +3,21 @@ package com.github.nginate.kafka.docker;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.LogConfig;
 import com.github.dockerjava.api.model.RestartPolicy;
-import com.google.common.base.Throwables;
 import lombok.experimental.UtilityClass;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+import java.util.Optional;
+import java.util.function.BiPredicate;
 
 @UtilityClass
 public final class DockerConfigs {
     private static final int ZOOKEEPER_PORT = 2181;
 
-    public static ContainerConfig kafkaContainerConfiguration(Integer kafkaPort) {
+    public static ContainerConfig kafkaContainerConfiguration(Integer kafkaPort) throws SocketException {
         return ContainerConfig.builder()
                 .image("spotify/kafka")
                 .name("kafka-bundle")
@@ -30,14 +32,30 @@ public final class DockerConfigs {
                 .build();
     }
 
-    private static String getHostIp(){
-        try {
-            URL whatIsMyIp = new URL("http://checkip.amazonaws.com");
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(whatIsMyIp.openStream()))){
-                return in.readLine();
+    private static String getHostIp() throws SocketException {
+        return filterInterfaceIp((inetAddress, networkInterface) -> !inetAddress.isLoopbackAddress()
+                && inetAddress instanceof Inet4Address && !networkInterface.getName().contains("docker"))
+                .orElseThrow(() -> new RuntimeException("Public IP not found for current host"));
+    }
+
+    private String getDockerGatewayIp() throws SocketException {
+        return filterInterfaceIp((inetAddress, networkInterface) -> !inetAddress.isLoopbackAddress()
+                && inetAddress instanceof Inet4Address && networkInterface.getName().contains("docker"))
+                .orElseThrow(() -> new RuntimeException("Docker gateway IP not found for current host"));
+    }
+
+    private static Optional<String> filterInterfaceIp(BiPredicate<InetAddress, NetworkInterface> filter) throws SocketException {
+        Enumeration<NetworkInterface> networkInterfaces2 = NetworkInterface.getNetworkInterfaces();
+        while(networkInterfaces2.hasMoreElements()) {
+            NetworkInterface networkInterface = networkInterfaces2.nextElement();
+            Enumeration<InetAddress> interfaceAddresses = networkInterface.getInetAddresses();
+            while(interfaceAddresses.hasMoreElements()) {
+                InetAddress current =  interfaceAddresses.nextElement();
+                if (filter.test(current, networkInterface)) {
+                    return Optional.of(current.getHostAddress());
+                }
             }
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
         }
+        return Optional.empty();
     }
 }
