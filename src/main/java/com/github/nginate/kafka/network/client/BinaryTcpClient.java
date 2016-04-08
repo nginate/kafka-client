@@ -6,10 +6,7 @@ import com.github.nginate.kafka.network.BinaryMessageDecoder;
 import com.github.nginate.kafka.network.BinaryMessageEncoder;
 import com.google.common.base.Throwables;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -76,7 +73,7 @@ public class BinaryTcpClient {
         context.addMetadata(message.getCorrelationId(), messageMetadata);
         responseMap.put(message.getCorrelationId(), responseFuture);
 		send(message);
-        return responseFuture.thenApply(responseType::cast);
+        return responseFuture.thenApplyAsync(responseType::cast);
     }
 
     private void tryConnect() {

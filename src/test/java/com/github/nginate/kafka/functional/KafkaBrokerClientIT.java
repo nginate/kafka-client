@@ -1,8 +1,12 @@
 package com.github.nginate.kafka.functional;
 
 import com.github.nginate.kafka.core.KafkaBrokerClient;
-import com.github.nginate.kafka.protocol.messages.response.DescribeGroupsResponse;
-import com.github.nginate.kafka.protocol.messages.response.MetadataResponse;
+import com.github.nginate.kafka.protocol.messages.request.FetchRequest;
+import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest;
+import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper;
+import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper.PartitionStateInfo;
+import com.github.nginate.kafka.protocol.messages.request.OffsetRequest;
+import com.github.nginate.kafka.protocol.messages.response.*;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -23,9 +27,9 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
 
     @BeforeClass
     public void prepareClient() throws Exception {
-        client = new KafkaBrokerClient(getKafkaContainer().getIp(), getTestProperties().getKafkaPort());
         waitUntil(10000, 1000, () -> {
             try {
+                client = new KafkaBrokerClient(getKafkaContainer().getIp(), getTestProperties().getKafkaPort());
                 client.connect();
                 log.info("Connected");
                 return true;
@@ -41,15 +45,40 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         client.close();
     }
 
-    @Test
+    @Test(enabled = false) // is not present in kafka 0.8.2
     public void testDescribeGroupsRequest() throws Exception {
         DescribeGroupsResponse response = await(client.describeGroups());
         assertThat(response).isNotNull();
     }
 
     @Test
-    public void testTopicMetadataRequest() throws Exception {
-        MetadataResponse response = await(client.topicMetadata("abc"));
+    public void testFetchRequest() throws Exception {
+        FetchRequest request = FetchRequest.builder().maxWaitTime(100).build();
+        FetchResponse response = await(client.fetch(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testOffsetsRequest() throws Exception {
+        OffsetRequest request = OffsetRequest.builder().build();
+        OffsetResponse response = await(client.getOffset(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testMetadataRequest() throws Exception {
+        TopicMetadataResponse response = await(client.topicMetadata());
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testLeaderAndIsrRequest() throws Exception {
+        LeaderAndIsrRequest request = LeaderAndIsrRequest.builder().build();
+        LeaderAndIsrResponse response = await(client.leaderAndIsr(request));
+
         assertThat(response).isNotNull();
     }
 

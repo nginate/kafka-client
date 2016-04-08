@@ -7,6 +7,7 @@ import com.github.nginate.kafka.docker.DockerContainer;
 import com.github.nginate.kafka.docker.DockerWrapper;
 import com.google.common.collect.Maps;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.AfterClass;
@@ -20,6 +21,7 @@ import java.util.Properties;
 
 import static com.github.nginate.kafka.docker.DockerConfigs.kafkaContainerConfiguration;
 
+@Slf4j
 public abstract class AbstractFunctionalTest {
     @Getter
     private DockerContainer kafkaContainer;
@@ -43,6 +45,7 @@ public abstract class AbstractFunctionalTest {
         kafkaContainer.pullImage();
         kafkaContainer.create();
         kafkaContainer.start();
+        log.info("Kafka started on {}", kafkaContainer.getIp());
     }
 
     @AfterClass(alwaysRun = true)

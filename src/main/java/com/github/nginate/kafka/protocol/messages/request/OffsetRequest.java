@@ -3,6 +3,7 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.types.Type;
+import lombok.Builder;
 import lombok.Data;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
@@ -16,6 +17,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  * this API is slightly funky.
  */
 @Data
+@Builder
 @ApiKey(ApiKeys.LIST_OFFSETS)
 public class OffsetRequest {
     @Type(value = INT32, order = 4)

@@ -57,6 +57,8 @@ public enum ApiKeys {
     METADATA((short)3),
     LEADER_AND_ISR((short)4),
     STOP_REPLICA((short)5),
+    UPDATE_METADATA((short)6),
+    CONTROLLED_SHUTDOWN((short) 7),
     /**
      * This api saves out the consumer's position in the stream for one or more partitions. In the scala API this
      * happens when the consumer calls commit() or in the background if "autocommit" is enabled. This is the position
@@ -69,7 +71,7 @@ public enum ApiKeys {
      * it is not really an error), but returns empty metadata and sets the offset field to -1.
      */
     OFFSET_FETCH((short)9),
-    GROUP_COORDINATOR((short)10),
+    GROUP_COORDINATOR((short)10), //FIXME CONSUMER_METADATA in server
     /**
      * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics
      * as in the initial consumer rewrite design. After finding the coordinator for the group, each member sends a

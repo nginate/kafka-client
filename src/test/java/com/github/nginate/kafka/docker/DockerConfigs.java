@@ -29,6 +29,7 @@ public final class DockerConfigs {
                 .env("KAFKA_HEAP_OPTS", "-Xmx256M -Xms128M")
                 .logConfig(new LogConfig(LogConfig.LoggingType.DEFAULT))
                 .restartPolicy(RestartPolicy.alwaysRestart())
+                .networkMode("host")
                 .build();
     }
 

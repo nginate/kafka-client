@@ -34,9 +34,13 @@ public class KafkaBrokerClient implements Closeable {
         binaryTcpClient.connect();
     }
 
-    public CompletableFuture<MetadataResponse> topicMetadata(String... topicNames) {
+    public CompletableFuture<TopicMetadataResponse> topicMetadata(String... topicNames) {
         TopicMetadataRequest request = TopicMetadataRequest.builder().topic(topicNames).build();
-        return sendAndReceive(request, MetadataResponse.class);
+        return topicMetadata(request);
+    }
+
+    public CompletableFuture<TopicMetadataResponse> topicMetadata(TopicMetadataRequest request) {
+        return sendAndReceive(request, TopicMetadataResponse.class);
     }
 
     public CompletableFuture<DescribeGroupsResponse> describeGroups(String... groupIds) {
@@ -88,6 +92,10 @@ public class KafkaBrokerClient implements Closeable {
 
     public CompletableFuture<SyncGroupResponse> syncGroup(SyncGroupRequest request) {
         return sendAndReceive(request, SyncGroupResponse.class);
+    }
+
+    public CompletableFuture<LeaderAndIsrResponse> leaderAndIsr(LeaderAndIsrRequest request) {
+        return sendAndReceive(request, LeaderAndIsrResponse.class);
     }
 
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)

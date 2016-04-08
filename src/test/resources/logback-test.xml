@@ -14,5 +14,5 @@
     </root>
 
     <logger name="com.github.nginate.kafka" level="DEBUG"/>
-    <logger name="com.github.dockerjava" level="DEBUG"/>
+    <logger name="com.github.dockerjava" level="INFO"/>
 </configuration>

@@ -2,6 +2,7 @@ package com.github.nginate.kafka.protocol.messages.response;
 
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.protocol.messages.dto.Broker;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Data;
 
@@ -13,21 +14,11 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @ApiKey(ApiKeys.METADATA)
-public class MetadataResponse {
+public class TopicMetadataResponse {
     @Type(value = WRAPPER, order = 2)
     private Broker[] brokers;
     @Type(value = WRAPPER, order = 3)
     private TopicMetadata[] topicMetadata;
-
-    @Data
-    public static class Broker {
-        @Type(INT32)
-        private Integer nodeId;
-        @Type(value = STRING, order = 1)
-        private String host;
-        @Type(value = INT32, order = 2)
-        private Integer port;
-    }
 
     @Data
     public static class TopicMetadata {
