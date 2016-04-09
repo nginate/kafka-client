@@ -6,6 +6,7 @@ import com.github.nginate.kafka.network.client.BinaryTcpClient;
 import com.github.nginate.kafka.network.client.BinaryTcpClientConfig;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaSerializer;
+import com.github.nginate.kafka.protocol.messages.ApiVersion;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.messages.request.*;
@@ -112,9 +113,8 @@ public class KafkaBrokerClient implements Closeable {
 
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)
             throws CommunicationException {
-        short apiKey = payload.getClass().getAnnotation(ApiKey.class).value().getId();
         Request request = Request.builder()
-                .apiVersion(apiKey)
+                .apiVersion(ApiVersion.V0.getVersionKey())
                 .clientId(clientId)
                 .correlationId(correlationIdCounter.incrementAndGet())
                 .message(payload)

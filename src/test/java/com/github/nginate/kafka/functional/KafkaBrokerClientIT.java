@@ -4,6 +4,7 @@ import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
 import lombok.extern.slf4j.Slf4j;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -36,7 +37,7 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         });
     }
 
-    @AfterMethod
+    @AfterClass
     public void tearDownClient() throws Exception {
         client.close();
     }
@@ -44,6 +45,14 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
     @Test(enabled = false) // is not present in kafka 0.8.2
     public void testDescribeGroupsRequest() throws Exception {
         DescribeGroupsResponse response = await(client.describeGroups());
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testProduceRequest() throws Exception {
+        ProduceRequest request = ProduceRequest.builder().build();
+        ProduceResponse response = await(client.produce(request));
+
         assertThat(response).isNotNull();
     }
 
@@ -98,6 +107,14 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
     public void testControlledShutdownRequest() throws Exception {
         ControlledShutdownRequest request = ControlledShutdownRequest.builder().build();
         ControlledShutdownResponse response = await(client.controlledShutdown(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testOffsetCommitRequest() throws Exception {
+        OffsetCommitRequest request = OffsetCommitRequest.builder().build();
+        OffsetCommitResponse response = await(client.commitOffset(request));
 
         assertThat(response).isNotNull();
     }
