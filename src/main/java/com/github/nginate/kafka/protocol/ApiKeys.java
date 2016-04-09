@@ -58,6 +58,11 @@ public enum ApiKeys {
     LEADER_AND_ISR((short)4),
     STOP_REPLICA((short)5),
     UPDATE_METADATA((short)6),
+    /**
+     * Note that controlled shutdown will only succeed if all the partitions hosted on the broker have replicas
+     * (i.e. the replication factor is greater than 1 and at least one of these replicas is alive). This is generally
+     * what you want since shutting down the last replica would make that topic partition unavailable.
+     */
     CONTROLLED_SHUTDOWN((short) 7),
     /**
      * This api saves out the consumer's position in the stream for one or more partitions. In the scala API this

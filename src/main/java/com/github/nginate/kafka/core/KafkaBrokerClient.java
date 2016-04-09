@@ -102,9 +102,12 @@ public class KafkaBrokerClient implements Closeable {
         return sendAndReceive(request, StopReplicaResponse.class); //TODO transform error codes into exceptions
     }
 
-    public CompletableFuture<UpdateMetadataResponse> updateMetadata(UpdateMetadataRequest request)
-    {
+    public CompletableFuture<UpdateMetadataResponse> updateMetadata(UpdateMetadataRequest request) {
         return sendAndReceive(request, UpdateMetadataResponse.class); //TODO transform error codes into exceptions
+    }
+
+    public CompletableFuture<ControlledShutdownResponse> controlledShutdown(ControlledShutdownRequest request) {
+        return sendAndReceive(request, ControlledShutdownResponse.class);  //TODO transform error codes into exceptions
     }
 
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)

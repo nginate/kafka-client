@@ -94,6 +94,14 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         assertThat(response).isNotNull();
     }
 
+    @Test
+    public void testControlledShutdownRequest() throws Exception {
+        ControlledShutdownRequest request = ControlledShutdownRequest.builder().build();
+        ControlledShutdownResponse response = await(client.controlledShutdown(request));
+
+        assertThat(response).isNotNull();
+    }
+
     private <T> T await(CompletableFuture<T> completableFuture)
             throws InterruptedException, ExecutionException, TimeoutException {
         return completableFuture.get(getTestProperties().getClientTimeout(), TimeUnit.MILLISECONDS);
