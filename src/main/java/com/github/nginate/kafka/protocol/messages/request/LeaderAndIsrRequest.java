@@ -3,6 +3,7 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.Broker;
+import com.github.nginate.kafka.protocol.messages.dto.TopicAndPartition;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -27,11 +28,9 @@ public class LeaderAndIsrRequest {
     @Data
     @Builder
     public static class PartitionStateInfoWrapper {
-        @Type(STRING)
-        private String topic;
-        @Type(value = INT32, order = 1)
-        private Integer partition;
-        @Type(value = WRAPPER, order = 2)
+        @Type(WRAPPER)
+        private TopicAndPartition topicAndPartition;
+        @Type(value = WRAPPER, order = 1)
         private PartitionStateInfo[] partitionStateInfos;
 
         @Data

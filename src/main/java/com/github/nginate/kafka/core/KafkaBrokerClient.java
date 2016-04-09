@@ -95,7 +95,11 @@ public class KafkaBrokerClient implements Closeable {
     }
 
     public CompletableFuture<LeaderAndIsrResponse> leaderAndIsr(LeaderAndIsrRequest request) {
-        return sendAndReceive(request, LeaderAndIsrResponse.class);
+        return sendAndReceive(request, LeaderAndIsrResponse.class); //TODO transform error codes into exceptions
+    }
+
+    public CompletableFuture<StopReplicaResponse> stopReplica(StopReplicaRequest request) {
+        return sendAndReceive(request, StopReplicaResponse.class); //TODO transform error codes into exceptions
     }
 
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)

@@ -6,6 +6,7 @@ import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest;
 import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper;
 import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper.PartitionStateInfo;
 import com.github.nginate.kafka.protocol.messages.request.OffsetRequest;
+import com.github.nginate.kafka.protocol.messages.request.StopReplicaRequest;
 import com.github.nginate.kafka.protocol.messages.response.*;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterMethod;
@@ -78,6 +79,14 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
     public void testLeaderAndIsrRequest() throws Exception {
         LeaderAndIsrRequest request = LeaderAndIsrRequest.builder().build();
         LeaderAndIsrResponse response = await(client.leaderAndIsr(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testStopReplicaRequest() throws Exception {
+        StopReplicaRequest request = StopReplicaRequest.builder().deletePartitions((byte) 0).build();
+        StopReplicaResponse response = await(client.stopReplica(request));
 
         assertThat(response).isNotNull();
     }
