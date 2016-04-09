@@ -3,13 +3,12 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.ApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.Broker;
-import com.github.nginate.kafka.protocol.messages.dto.TopicAndPartition;
+import com.github.nginate.kafka.protocol.messages.dto.PartitionsStateInfoWrapper;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
 import static com.github.nginate.kafka.protocol.types.TypeName.WRAPPER;
 
 @Data
@@ -21,45 +20,8 @@ public class LeaderAndIsrRequest {
     @Type(value = INT32, order = 5)
     private Integer controllerEpoch;
     @Type(value = WRAPPER, order = 6)
-    private PartitionStateInfoWrapper[] partitionStateInfoWrappers;
+    private PartitionsStateInfoWrapper[] partitionStateInfoWrappers;
     @Type(value = WRAPPER, order = 7)
     private Broker[] leaders;
 
-    @Data
-    @Builder
-    public static class PartitionStateInfoWrapper {
-        @Type(WRAPPER)
-        private TopicAndPartition topicAndPartition;
-        @Type(value = WRAPPER, order = 1)
-        private PartitionStateInfo[] partitionStateInfos;
-
-        @Data
-        @Builder
-        public static class PartitionStateInfo {
-            @Type(WRAPPER)
-            private LeaderIsrAndControllerEpoch leaderIsrAndControllerEpoch;
-            @Type(value = INT32, order = 1)
-            private Integer[] allReplicas;
-
-            @Data
-            public static class LeaderIsrAndControllerEpoch {
-                @Type(WRAPPER)
-                private LeaderAndIsr leaderAndIsr;
-                @Type(value = INT32, order = 1)
-                private Integer controllerEpoch;
-
-                @Data
-                public static class LeaderAndIsr {
-                    @Type(INT32)
-                    private Integer leader;
-                    @Type(value = INT32, order = 1)
-                    private Integer leaderEpoch;
-                    @Type(value = INT32, order = 2)
-                    private Integer[] isr;
-                    @Type(value = INT32, order = 3)
-                    private Integer zkVersion;
-                }
-            }
-        }
-    }
 }

@@ -1,12 +1,7 @@
 package com.github.nginate.kafka.functional;
 
 import com.github.nginate.kafka.core.KafkaBrokerClient;
-import com.github.nginate.kafka.protocol.messages.request.FetchRequest;
-import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest;
-import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper;
-import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest.PartitionStateInfoWrapper.PartitionStateInfo;
-import com.github.nginate.kafka.protocol.messages.request.OffsetRequest;
-import com.github.nginate.kafka.protocol.messages.request.StopReplicaRequest;
+import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterMethod;
@@ -87,6 +82,14 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
     public void testStopReplicaRequest() throws Exception {
         StopReplicaRequest request = StopReplicaRequest.builder().deletePartitions((byte) 0).build();
         StopReplicaResponse response = await(client.stopReplica(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testUpdateMetadataRequest() throws Exception {
+        UpdateMetadataRequest request = UpdateMetadataRequest.builder().build();
+        UpdateMetadataResponse response = await(client.updateMetadata(request));
 
         assertThat(response).isNotNull();
     }
