@@ -119,6 +119,20 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         assertThat(response).isNotNull();
     }
 
+    @Test
+    public void testOffsetFetchRequest() throws Exception {
+        OffsetFetchRequest request = OffsetFetchRequest.builder().build();
+        OffsetFetchResponse response = await(client.fetchOffset(request));
+
+        assertThat(response).isNotNull();
+    }
+
+    @Test
+    public void testGroupCoordinatorRequest() throws Exception {
+        GroupCoordinatorResponse response = await(client.getGroupCoordinator(""));
+        assertThat(response).isNotNull();
+    }
+
     private <T> T await(CompletableFuture<T> completableFuture)
             throws InterruptedException, ExecutionException, TimeoutException {
         return completableFuture.get(getTestProperties().getClientTimeout(), TimeUnit.MILLISECONDS);
