@@ -19,7 +19,7 @@ public final class DockerConfigs {
 
     public static ContainerConfig kafkaContainerConfiguration(Integer kafkaPort) throws SocketException {
         return ContainerConfig.builder()
-                .image("nginate/kafka-docker-bundle:0.8.2")
+                .image("nginate/kafka-docker-bundle:testing")
                 .name("kafka-bundle")
                 .exposedPort(ExposedPort.tcp(ZOOKEEPER_PORT))
                 .exposedPort(ExposedPort.tcp(kafkaPort))

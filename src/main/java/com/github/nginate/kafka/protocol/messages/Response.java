@@ -6,13 +6,14 @@ import lombok.Data;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.INT16;
 import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
+import static com.github.nginate.kafka.protocol.types.TypeName.WRAPPER;
 
 /**
  * Field order starts with 1 because of Message size field
  */
 @Data
 public class Response implements AnswerableMessage<Integer> {
-    @Type(value = INT32, order = 1)
+    @Type(INT32)
     private Integer correlationId;
     private Object message;
 }

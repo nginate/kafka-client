@@ -3,11 +3,16 @@ package com.github.nginate.kafka.functional;
 import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
+import kafka.cluster.Broker;
+import kafka.utils.ZkUtils;
+import kafka.utils.ZkUtils$;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.zookeeper.ZKUtil;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import scala.collection.Seq;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +37,21 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
                 return true;
             } catch (Exception e) {
                 log.warn("Could not connect : {}", e.getMessage());
+                return false;
+            }
+        });
+
+        ZkUtils.setupCommonPaths(getZkClient());
+
+        // waiting for broker registration in container
+        waitUntil(10000, 1000, () -> {
+            try
+            {
+                return !getZkClient().getChildren("/brokers/ids").isEmpty();
+            }
+            catch (Exception e)
+            {
+                log.warn("Could not retrieve broker list : {}", e.getMessage());
                 return false;
             }
         });
@@ -135,6 +155,11 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
 
     private <T> T await(CompletableFuture<T> completableFuture)
             throws InterruptedException, ExecutionException, TimeoutException {
+        return await(completableFuture, getTestProperties().getClientTimeout());
+    }
+    private <T> T await(CompletableFuture<T> completableFuture, int timeout)
+            throws InterruptedException, ExecutionException, TimeoutException {
         return completableFuture.get(getTestProperties().getClientTimeout(), TimeUnit.MILLISECONDS);
     }
+
 }

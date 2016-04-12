@@ -131,7 +131,7 @@ public class KafkaSerializer implements BinaryMessageSerializer {
 
     private void readField(Field field, Object response, ByteBuf buf) {
         try {
-            Class<?> clazz = field.getDeclaringClass();
+            Class<?> clazz = field.getType();
             Type type = field.getAnnotation(Type.class);
             BiFunction<ByteBuf, Class<?>, Object> deserializer = deserializers.get(type.value());
             Object value = null;

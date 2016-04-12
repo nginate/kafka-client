@@ -8,6 +8,7 @@ import com.github.nginate.kafka.docker.DockerWrapper;
 import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.AfterClass;
@@ -16,7 +17,6 @@ import org.testng.annotations.BeforeSuite;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
 import static com.github.nginate.kafka.docker.DockerConfigs.kafkaContainerConfiguration;
@@ -27,6 +27,8 @@ public abstract class AbstractFunctionalTest {
     private DockerContainer kafkaContainer;
     @Getter
     private TestProperties testProperties;
+    @Getter
+    private ZkClient zkClient;
 
     @BeforeSuite
     public void initProperties() throws Exception {
@@ -46,16 +48,19 @@ public abstract class AbstractFunctionalTest {
         kafkaContainer.create();
         kafkaContainer.start();
         log.info("Kafka started on {}", kafkaContainer.getIp());
+
+        zkClient = new ZkClient(String.format("%s:%d", kafkaContainer.getIp(), testProperties.getZookeeperPort()));
     }
 
     @AfterClass(alwaysRun = true)
     public void tearDownDockerContainer() throws Exception {
+        zkClient.close();
         kafkaContainer.forceStop();
         kafkaContainer.printLogs();
         kafkaContainer.remove();
     }
 
-    private void populateProperties(Object bean, String propertiesFileName) throws IOException, IllegalAccessException, InvocationTargetException {
+    private void populateProperties(Object bean, String propertiesFileName) throws Exception {
         Properties properties = loadProperties(propertiesFileName);
         BeanUtils.populate(bean, Maps.fromProperties(properties));
     }
