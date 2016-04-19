@@ -122,7 +122,7 @@ public final class ErrorCodes {
      */
     public static final int INVALID_GROUP_ID = 24;
     /**
-     * Returned from group requests (offset commits/fetches, heartbeats, etc) when the memberId is not in the current
+     * Returned from group requests (offset commits/fetches, heartbeats, etc) when the consumerId is not in the current
      * generation.
      */
     public static final int UNKNOWN_MEMBER_ID = 25;

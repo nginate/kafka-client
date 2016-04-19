@@ -153,13 +153,22 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
         assertThat(response).isNotNull();
     }
 
+    @Test(enabled = false) // not available in 0.8.2
+    public void testJoinGroupRequest() throws Exception {
+        JoinGroupRequest request = JoinGroupRequest.builder().groupId("").topics(new String[]{"topic"}).consumerId("")
+                .strategy("").build();
+        JoinGroupResponse response = await(client.joinGroup(request));
+
+        assertThat(response).isNotNull();
+    }
+
     private <T> T await(CompletableFuture<T> completableFuture)
             throws InterruptedException, ExecutionException, TimeoutException {
         return await(completableFuture, getTestProperties().getClientTimeout());
     }
     private <T> T await(CompletableFuture<T> completableFuture, int timeout)
             throws InterruptedException, ExecutionException, TimeoutException {
-        return completableFuture.get(getTestProperties().getClientTimeout(), TimeUnit.MILLISECONDS);
+        return completableFuture.get(timeout, TimeUnit.MILLISECONDS);
     }
 
 }
