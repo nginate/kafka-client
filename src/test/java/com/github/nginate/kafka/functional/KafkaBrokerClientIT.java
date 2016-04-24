@@ -3,23 +3,18 @@ package com.github.nginate.kafka.functional;
 import com.github.nginate.kafka.core.KafkaBrokerClient;
 import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
-import kafka.cluster.Broker;
 import kafka.utils.ZkUtils;
-import kafka.utils.ZkUtils$;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.zookeeper.ZKUtil;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import scala.collection.Seq;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.github.nginate.kafka.util.WaitUtil.waitUntil;
+import static com.github.nginate.commons.lang.await.Await.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
@@ -29,11 +24,11 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
 
     @BeforeClass
     public void prepareClient() throws Exception {
+        client = new KafkaBrokerClient(getTestProperties().getKafkaHost(), getTestProperties().getKafkaPort());
+
         waitUntil(10000, 1000, () -> {
             try {
-                client = new KafkaBrokerClient(getKafkaContainer().getIp(), getTestProperties().getKafkaPort());
                 client.connect();
-                log.info("Connected");
                 return true;
             } catch (Exception e) {
                 log.warn("Could not connect : {}", e.getMessage());
@@ -41,16 +36,15 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
             }
         });
 
+        log.info("Connected");
+
         ZkUtils.setupCommonPaths(getZkClient());
 
         // waiting for broker registration in container
         waitUntil(10000, 1000, () -> {
-            try
-            {
+            try {
                 return !getZkClient().getChildren("/brokers/ids").isEmpty();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 log.warn("Could not retrieve broker list : {}", e.getMessage());
                 return false;
             }
@@ -166,6 +160,7 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
             throws InterruptedException, ExecutionException, TimeoutException {
         return await(completableFuture, getTestProperties().getClientTimeout());
     }
+
     private <T> T await(CompletableFuture<T> completableFuture, int timeout)
             throws InterruptedException, ExecutionException, TimeoutException {
         return completableFuture.get(timeout, TimeUnit.MILLISECONDS);

@@ -52,6 +52,8 @@ dependencies {
         exclude group: 'log4j'
         exclude group: 'org.slf4j'
     }
+    testCompile "com.github.nginate:commons-lang:1.0-SNAPSHOT"
+    testCompile "com.github.nginate:commons-docker:1.0-SNAPSHOT"
 
     testRuntime 'ch.qos.logback:logback-classic:1.1.7'
     testRuntime "org.slf4j:jcl-over-slf4j:$slf4jVersion"

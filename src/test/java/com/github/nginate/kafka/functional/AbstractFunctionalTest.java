@@ -1,10 +1,9 @@
 package com.github.nginate.kafka.functional;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.nginate.commons.docker.DockerUtils;
+import com.github.nginate.commons.docker.client.DockerClient;
+import com.github.nginate.commons.docker.wrapper.DockerContainer;
 import com.github.nginate.kafka.TestProperties;
-import com.github.nginate.kafka.docker.DockerContainer;
-import com.github.nginate.kafka.docker.DockerWrapper;
 import com.google.common.collect.Maps;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,14 +18,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import static com.github.nginate.kafka.docker.DockerConfigs.kafkaContainerConfiguration;
+import static com.github.nginate.commons.lang.NStrings.format;
+import static com.github.nginate.kafka.DockerConfigs.kafkaContainerConfiguration;
 
 @Slf4j
 public abstract class AbstractFunctionalTest {
     @Getter
     private DockerContainer kafkaContainer;
     @Getter
-    private TestProperties testProperties;
+    private static TestProperties testProperties;
     @Getter
     private ZkClient zkClient;
 
@@ -38,24 +38,21 @@ public abstract class AbstractFunctionalTest {
 
     @BeforeClass
     public void initDockerContainer() throws Exception {
-        DockerClient dockerClient = DockerClientBuilder.getInstance(testProperties.getDockerUrl()).build();
-        kafkaContainer = new DockerWrapper.Builder()
-                .dockerClient(dockerClient)
-                .containerConfiguration(kafkaContainerConfiguration(testProperties.getKafkaPort()))
-                .useSlf4jInfoLogging()
-                .build();
-        kafkaContainer.pullImage();
-        kafkaContainer.create();
+        DockerClient dockerClient = DockerUtils.createClient(testProperties.getDockerUrl());
+        kafkaContainer = DockerUtils.forceCreateContainer(dockerClient,
+                kafkaContainerConfiguration(testProperties.getKafkaPort(), testProperties.getZookeeperPort()));
         kafkaContainer.start();
-        log.info("Kafka started on {}", kafkaContainer.getIp());
+        kafkaContainer.awaitStarted();
 
-        zkClient = new ZkClient(String.format("%s:%d", kafkaContainer.getIp(), testProperties.getZookeeperPort()));
+        log.info("Kafka started on {}", testProperties.getKafkaHost());
+
+        zkClient = new ZkClient(format("{}:{}", testProperties.getKafkaHost(), testProperties.getZookeeperPort()));
     }
 
     @AfterClass(alwaysRun = true)
     public void tearDownDockerContainer() throws Exception {
         zkClient.close();
-        kafkaContainer.forceStop();
+        kafkaContainer.stop();
         kafkaContainer.printLogs();
         kafkaContainer.remove();
     }

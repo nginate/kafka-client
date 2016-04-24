@@ -1,8 +1,9 @@
-package com.github.nginate.kafka.docker;
+package com.github.nginate.kafka;
 
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.LogConfig;
 import com.github.dockerjava.api.model.RestartPolicy;
+import com.github.nginate.commons.docker.client.options.CreateContainerOptions;
 import lombok.experimental.UtilityClass;
 
 import java.net.Inet4Address;
@@ -15,15 +16,15 @@ import java.util.function.BiPredicate;
 
 @UtilityClass
 public final class DockerConfigs {
-    private static final int ZOOKEEPER_PORT = 2181;
 
-    public static ContainerConfig kafkaContainerConfiguration(Integer kafkaPort) throws SocketException {
-        return ContainerConfig.builder()
+    public static CreateContainerOptions kafkaContainerConfiguration(Integer kafkaPort, Integer zookeeperPort)
+            throws SocketException {
+        return CreateContainerOptions.builder()
                 .image("nginate/kafka-docker-bundle:testing")
                 .name("kafka-bundle")
-                .exposedPort(ExposedPort.tcp(ZOOKEEPER_PORT))
+                .exposedPort(ExposedPort.tcp(zookeeperPort))
                 .exposedPort(ExposedPort.tcp(kafkaPort))
-                .oneToOnePortBindings(ZOOKEEPER_PORT, kafkaPort)
+                .oneToOnePortBindings(zookeeperPort, kafkaPort)
                 .env("ADVERTISED_PORT", kafkaPort.toString())
                 .env("ADVERTISED_HOST", getHostIp())
                 .env("KAFKA_HEAP_OPTS", "-Xmx256M -Xms128M")
