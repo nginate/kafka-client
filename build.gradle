@@ -15,6 +15,10 @@ plugins {
 group 'com.github.nginate'
 version '1.0-SNAPSHOT'
 
+ext {
+    slf4jVersion = '1.7.21'
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'nebula.optional-base'
@@ -29,7 +33,7 @@ repositories {
 
 dependencies {
     compile 'io.netty:netty-all:4.0.36.Final'
-    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile "org.slf4j:slf4j-api:$slf4jVersion"
 
     // Utils
     compile 'com.google.guava:guava:19.0'
@@ -43,10 +47,15 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.testng:testng:6.9.11'
     testCompile 'org.assertj:assertj-core:3.4.1'
-    testCompile 'com.github.docker-java:docker-java:2.2.3'
-    testCompile 'me.jeffshaw.kafka:kafka_2.11:0.8.2.1'
+    testCompile('me.jeffshaw.kafka:kafka_2.11:0.8.2.1') {
+        exclude group: 'log4j'
+        exclude group: 'org.slf4j'
+    }
 
     testRuntime 'ch.qos.logback:logback-classic:1.1.7'
+    testRuntime "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+    testRuntime "org.slf4j:jul-to-slf4j:$slf4jVersion"
+    testRuntime "org.slf4j:log4j-over-slf4j:$slf4jVersion"
 }
 
 build.dependsOn install
