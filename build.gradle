@@ -11,10 +11,9 @@ buildscript {
 
 plugins {
     id 'nebula.optional-base' version '3.1.0'
+    id "com.jfrog.bintray" version "1.6"
+    id 'net.researchgate.release' version '2.3.5'
 }
-
-group 'com.github.nginate'
-version '1.0-SNAPSHOT'
 
 ext {
     slf4jVersion = '1.7.21'
@@ -22,9 +21,11 @@ ext {
 
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: "maven-publish"
 apply plugin: 'nebula.optional-base'
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: "info.solidsoft.pitest"
+apply plugin: 'com.jfrog.bintray'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -54,7 +55,7 @@ dependencies {
         exclude group: 'log4j'
         exclude group: 'org.slf4j'
     }
-    testCompile "com.github.nginate:commons-lang:1.0-SNAPSHOT"
+    testCompile "com.github.nginate:commons-lang:1.0.0"
     testCompile "com.github.nginate:commons-docker:1.0-SNAPSHOT"
 
     testRuntime 'ch.qos.logback:logback-classic:1.1.7'
@@ -63,8 +64,40 @@ dependencies {
     testRuntime "org.slf4j:log4j-over-slf4j:$slf4jVersion"
 }
 
-test { useTestNG() }
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
 
+test {
+    useTestNG()
+    testLogging {
+        exceptionFormat = 'full'
+    }
+}
+
+bintray {
+    user = findProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
+    key = findProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
+    publications = ['maven']
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = 'nginate'
+        licenses = ['WTFPL']
+        vcsUrl = 'https://github.com/nginate/kafka-client.git'
+        version {
+            name = project.version
+            desc = "${project.name} $project.version"
+            released = new Date().format("yyyy-MM-dd'T'HH:mm:ss.SSSZZ")
+            vcsTag = project.version
+        }
+    }
+}
+
+bintrayUpload.dependsOn ':generatePomFileForMavenPublication', ':assemble'
+check.dependsOn ':pitest'
 build.dependsOn install
 
 task sourceJar(type: Jar, dependsOn: classes) {
@@ -80,6 +113,16 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 artifacts {
     archives sourceJar
     archives javadocJar
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
 }
 
 task wrapper(type: Wrapper) {
