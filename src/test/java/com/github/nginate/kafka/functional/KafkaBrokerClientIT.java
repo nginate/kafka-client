@@ -24,7 +24,7 @@ public class KafkaBrokerClientIT extends AbstractFunctionalTest {
 
     @BeforeClass
     public void prepareClient() throws Exception {
-        client = new KafkaBrokerClient(getTestProperties().getKafkaHost(), getTestProperties().getKafkaPort());
+        client = new KafkaBrokerClient(getKafkaHost(), getTestProperties().getKafkaPort());
 
         waitUntil(10000, 1000, () -> {
             try {

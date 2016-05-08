@@ -1,3 +1,5 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerPullImage
+
 buildscript {
     repositories {
         jcenter()
@@ -13,6 +15,7 @@ plugins {
     id 'nebula.optional-base' version '3.1.0'
     id "com.jfrog.bintray" version "1.6"
     id 'net.researchgate.release' version '2.3.5'
+    id "com.bmuschko.docker-remote-api" version "2.6.7"
 }
 
 ext {
@@ -77,6 +80,10 @@ test {
     }
 }
 
+pitest {
+    excludedGroups = ["integration"]
+}
+
 bintray {
     user = findProperty('bintrayUser') ?: System.getenv('BINTRAY_USER')
     key = findProperty('bintrayApiKey') ?: System.getenv('BINTRAY_API_KEY')
@@ -96,9 +103,14 @@ bintray {
     }
 }
 
-bintrayUpload.dependsOn ':generatePomFileForMavenPublication', ':assemble'
-check.dependsOn ':pitest'
-build.dependsOn install
+docker {
+    def dockerCerts = findProperty('docker.certs') ?: System.getenv('DOCKER_CERTS')
+
+    url = findProperty('docker.uri') ?: System.getenv('DOCKER_HOST') ?: 'http://localhost:2375'
+    if (dockerCerts) {
+        certPath = new File(dockerCerts.toString())
+    }
+}
 
 task sourceJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -125,6 +137,23 @@ publishing {
     }
 }
 
+task pullKafkaImage_0_8(type: DockerPullImage) {
+    repository = 'nginate/kafka-docker-bundle:0.8'
+}
+
+task pullKafkaImage_0_9(type: DockerPullImage) {
+    repository = 'nginate/kafka-docker-bundle:0.9'
+}
+
+task pullDockerImages {
+    dependsOn ':pullKafkaImage_0_8', ':pullKafkaImage_0_9'
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
+
+bintrayUpload.dependsOn ':generatePomFileForMavenPublication', ':assemble'
+check.dependsOn ':pitest'
+test.dependsOn pullDockerImages
+build.dependsOn install

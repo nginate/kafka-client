@@ -1,7 +1,9 @@
 package com.github.nginate.kafka.functional;
 
 import com.github.nginate.commons.docker.DockerUtils;
-import com.github.nginate.commons.docker.client.DockerClient;
+import com.github.nginate.commons.docker.client.DockerClientOptions;
+import com.github.nginate.commons.docker.client.NDockerClient;
+import com.github.nginate.commons.docker.client.options.CreateContainerOptions;
 import com.github.nginate.commons.docker.wrapper.DockerContainer;
 import com.github.nginate.kafka.TestProperties;
 import com.google.common.collect.Maps;
@@ -13,15 +15,18 @@ import org.apache.commons.io.FileUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Properties;
 
 import static com.github.nginate.commons.lang.NStrings.format;
 import static com.github.nginate.kafka.DockerConfigs.kafkaContainerConfiguration;
 
 @Slf4j
+@Test(groups = "integration")
 public abstract class AbstractFunctionalTest {
     @Getter
     private DockerContainer kafkaContainer;
@@ -29,6 +34,8 @@ public abstract class AbstractFunctionalTest {
     private static TestProperties testProperties;
     @Getter
     private ZkClient zkClient;
+    @Getter
+    private String kafkaHost;
 
     @BeforeSuite
     public void initProperties() throws Exception {
@@ -38,15 +45,21 @@ public abstract class AbstractFunctionalTest {
 
     @BeforeClass
     public void initDockerContainer() throws Exception {
-        DockerClient dockerClient = DockerUtils.createClient(testProperties.getDockerUrl());
-        kafkaContainer = DockerUtils.forceCreateContainer(dockerClient,
-                kafkaContainerConfiguration(testProperties.getKafkaPort(), testProperties.getZookeeperPort()));
+        DockerClientOptions clientOptions = DockerUtils.defaultClientOptions().withReadTimeout(null);
+        String dockerHost = URI.create(clientOptions.getDockerUri()).getHost();
+        NDockerClient dockerClient = DockerUtils.createClient(clientOptions);
+
+        kafkaHost = dockerHost;
+
+        CreateContainerOptions kafkaContainerConfiguration = kafkaContainerConfiguration(kafkaHost,
+                testProperties.getKafkaPort(), testProperties.getZookeeperPort());
+        kafkaContainer = DockerUtils.forceCreateContainer(dockerClient, kafkaContainerConfiguration);
         kafkaContainer.start();
         kafkaContainer.awaitStarted();
 
-        log.info("Kafka started on {}", testProperties.getKafkaHost());
+        log.info("Kafka started on {}", kafkaHost);
 
-        zkClient = new ZkClient(format("{}:{}", testProperties.getKafkaHost(), testProperties.getZookeeperPort()));
+        zkClient = new ZkClient(format("{}:{}", dockerHost, testProperties.getZookeeperPort()));
     }
 
     @AfterClass(alwaysRun = true)
