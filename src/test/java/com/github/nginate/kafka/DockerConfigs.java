@@ -11,10 +11,10 @@ import java.net.SocketException;
 @UtilityClass
 public final class DockerConfigs {
 
-    public static CreateContainerOptions kafkaContainerConfiguration(String kafkaHost, Integer kafkaPort,
-            Integer zookeeperPort) throws SocketException {
+    public static CreateContainerOptions kafkaContainerConfiguration(String kafkaVersionTag,
+            String kafkaHost, Integer kafkaPort, Integer zookeeperPort) throws SocketException {
         return CreateContainerOptions.builder()
-                .image("nginate/kafka-docker-bundle:0.8")
+                .image("nginate/kafka-docker-bundle:" + kafkaVersionTag)
                 .name("kafka-bundle")
                 .exposedPort(ExposedPort.tcp(zookeeperPort))
                 .exposedPort(ExposedPort.tcp(kafkaPort))

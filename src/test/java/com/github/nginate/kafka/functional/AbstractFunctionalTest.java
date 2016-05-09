@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.URI;
 import java.util.Properties;
 
@@ -47,14 +48,14 @@ public abstract class AbstractFunctionalTest {
     public void initDockerContainer() throws Exception {
         DockerClientOptions clientOptions = DockerUtils.defaultClientOptions().withReadTimeout(null);
         String dockerHost = clientOptions.getDockerUri().startsWith("http") ?
-                URI.create(clientOptions.getDockerUri()).getHost() :
+                InetAddress.getByName(URI.create(clientOptions.getDockerUri()).getHost()).getHostAddress() :
                 "localhost";
         NDockerClient dockerClient = DockerUtils.createClient(clientOptions);
 
         kafkaHost = dockerHost;
 
-        CreateContainerOptions kafkaContainerConfiguration = kafkaContainerConfiguration(kafkaHost,
-                testProperties.getKafkaPort(), testProperties.getZookeeperPort());
+        CreateContainerOptions kafkaContainerConfiguration = kafkaContainerConfiguration(getKafkaBrokerVersion(),
+                kafkaHost, testProperties.getKafkaPort(), testProperties.getZookeeperPort());
         kafkaContainer = DockerUtils.forceCreateContainer(dockerClient, kafkaContainerConfiguration);
         kafkaContainer.start();
         kafkaContainer.awaitStarted();
@@ -71,6 +72,8 @@ public abstract class AbstractFunctionalTest {
         kafkaContainer.printLogs();
         kafkaContainer.remove();
     }
+
+    protected abstract String getKafkaBrokerVersion();
 
     private void populateProperties(Object bean, String propertiesFileName) throws Exception {
         Properties properties = loadProperties(propertiesFileName);

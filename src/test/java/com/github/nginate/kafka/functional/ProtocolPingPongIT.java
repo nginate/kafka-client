@@ -30,4 +30,9 @@ public class ProtocolPingPongIT extends AbstractFunctionalTest {
 
         assertThat(response).isNotNull();
     }
+
+    @Override
+    protected String getKafkaBrokerVersion() {
+        return "0.8";
+    }
 }
