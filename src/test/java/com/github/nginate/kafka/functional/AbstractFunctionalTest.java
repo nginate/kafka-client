@@ -46,7 +46,9 @@ public abstract class AbstractFunctionalTest {
     @BeforeClass
     public void initDockerContainer() throws Exception {
         DockerClientOptions clientOptions = DockerUtils.defaultClientOptions().withReadTimeout(null);
-        String dockerHost = URI.create(clientOptions.getDockerUri()).getHost();
+        String dockerHost = clientOptions.getDockerUri().startsWith("http") ?
+                URI.create(clientOptions.getDockerUri()).getHost() :
+                "localhost";
         NDockerClient dockerClient = DockerUtils.createClient(clientOptions);
 
         kafkaHost = dockerHost;
