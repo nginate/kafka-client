@@ -10,10 +10,12 @@ import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
+import com.google.common.base.Throwables;
 
 import java.io.Closeable;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class KafkaBrokerClient implements Closeable {
@@ -28,10 +30,6 @@ public class KafkaBrokerClient implements Closeable {
                 .port(port)
                 .build();
         binaryTcpClient = new BinaryTcpClient(config);
-    }
-
-    public void connect() {
-        binaryTcpClient.connect();
     }
 
     public boolean isConnectionAlive() {
@@ -128,6 +126,12 @@ public class KafkaBrokerClient implements Closeable {
 
     @Override
     public void close() {
-        binaryTcpClient.close();
+        try {
+            binaryTcpClient.close().get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

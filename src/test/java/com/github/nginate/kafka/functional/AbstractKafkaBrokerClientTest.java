@@ -21,7 +21,6 @@ public abstract class AbstractKafkaBrokerClientTest extends AbstractFunctionalTe
     @BeforeClass(dependsOnMethods = "initDockerContainer")
     public void prepareClient() throws Exception {
         client = new KafkaBrokerClient(getKafkaHost(), getKafkaPort());
-        client.connect();
 
         waitUntil(10000, 1000, () -> client.isConnectionAlive());
 
