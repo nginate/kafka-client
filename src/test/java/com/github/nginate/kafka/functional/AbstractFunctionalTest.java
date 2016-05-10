@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.nginate.commons.lang.NStrings.format;
 import static com.github.nginate.kafka.DockerConfigs.kafkaContainerConfiguration;
@@ -29,6 +30,10 @@ import static com.github.nginate.kafka.DockerConfigs.kafkaContainerConfiguration
 @Slf4j
 @Test(groups = "integration")
 public abstract class AbstractFunctionalTest {
+
+    private static final AtomicInteger KAFKA_PORT_COUNTER = new AtomicInteger(57900);
+    private static final AtomicInteger ZOOKEEPER_PORT_COUNTER = new AtomicInteger(58900);
+
     @Getter
     private DockerContainer kafkaContainer;
     @Getter
@@ -37,11 +42,13 @@ public abstract class AbstractFunctionalTest {
     private ZkClient zkClient;
     @Getter
     private String kafkaHost;
+    @Getter
+    private int kafkaPort;
 
     @BeforeSuite
     public void initProperties() throws Exception {
         testProperties = new TestProperties();
-        populateProperties(testProperties, "application.properties");
+        populateProperties(testProperties, "test.properties");
     }
 
     @BeforeClass
@@ -53,16 +60,18 @@ public abstract class AbstractFunctionalTest {
         NDockerClient dockerClient = DockerUtils.createClient(clientOptions);
 
         kafkaHost = dockerHost;
+        kafkaPort = KAFKA_PORT_COUNTER.getAndIncrement();
+        int zookeeperPort = ZOOKEEPER_PORT_COUNTER.getAndIncrement();
 
-        CreateContainerOptions kafkaContainerConfiguration = kafkaContainerConfiguration(getKafkaBrokerVersion(),
-                kafkaHost, testProperties.getKafkaPort(), testProperties.getZookeeperPort());
+        CreateContainerOptions kafkaContainerConfiguration =
+                kafkaContainerConfiguration(getKafkaBrokerVersion(), kafkaHost, kafkaPort, zookeeperPort);
         kafkaContainer = DockerUtils.forceCreateContainer(dockerClient, kafkaContainerConfiguration);
         kafkaContainer.start();
         kafkaContainer.awaitStarted();
 
-        log.info("Kafka started on {}", kafkaHost);
+        log.info("Kafka started on {}:{}", kafkaHost, kafkaPort);
 
-        zkClient = new ZkClient(format("{}:{}", dockerHost, testProperties.getZookeeperPort()));
+        zkClient = new ZkClient(format("{}:{}", dockerHost, zookeeperPort));
     }
 
     @AfterClass(alwaysRun = true)

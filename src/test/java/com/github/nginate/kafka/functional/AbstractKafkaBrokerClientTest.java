@@ -20,31 +20,17 @@ public abstract class AbstractKafkaBrokerClientTest extends AbstractFunctionalTe
 
     @BeforeClass(dependsOnMethods = "initDockerContainer")
     public void prepareClient() throws Exception {
-        client = new KafkaBrokerClient(getKafkaHost(), getTestProperties().getKafkaPort());
+        client = new KafkaBrokerClient(getKafkaHost(), getKafkaPort());
+        client.connect();
 
-        waitUntil(10000, 1000, () -> {
-            try {
-                client.connect();
-                return true;
-            } catch (Exception e) {
-                log.warn("Could not connect : {}", e.getMessage());
-                return false;
-            }
-        });
+        waitUntil(10000, 1000, () -> client.isConnectionAlive());
 
-        log.info("Connected");
+        log.info("Connected to Kafka broker");
 
         ZkUtils.setupCommonPaths(getZkClient());
 
         // waiting for broker registration in container
-        waitUntil(10000, 1000, () -> {
-            try {
-                return !getZkClient().getChildren("/brokers/ids").isEmpty();
-            } catch (Exception e) {
-                log.warn("Could not retrieve broker list : {}", e.getMessage());
-                return false;
-            }
-        });
+        waitUntil(10000, 1000, () -> !getZkClient().getChildren("/brokers/ids").isEmpty());
     }
 
     @AfterClass(alwaysRun = true)

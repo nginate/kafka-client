@@ -6,7 +6,10 @@ import com.github.nginate.kafka.network.BinaryMessageDecoder;
 import com.github.nginate.kafka.network.BinaryMessageEncoder;
 import com.google.common.base.Throwables;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -26,10 +29,10 @@ public class BinaryTcpClient {
     private final Map<Object, CompletableFuture<AnswerableMessage>> responseMap = new ConcurrentHashMap<>();
 	private final EventLoopGroup workerGroup;
     private final BinaryTcpClientConfig config;
+    private final Bootstrap bootstrap;
     private final BinaryClientContext context = new BinaryClientContext();
 
-    private ChannelFuture channelFuture;
-	private final Bootstrap bootstrap;
+    private volatile ChannelFuture channelFuture;
     private volatile AtomicBoolean connected = new AtomicBoolean();
 
 	public BinaryTcpClient(BinaryTcpClientConfig config) {
@@ -55,6 +58,10 @@ public class BinaryTcpClient {
         bootstrap.validate();
 	}
 
+    public boolean isConnectionAlive() {
+        return channelFuture.isDone();
+    }
+
 	public void connect() {
         if (connected.compareAndSet(false, true)) {
             tryConnect();
@@ -78,7 +85,6 @@ public class BinaryTcpClient {
 
     private void tryConnect() {
         channelFuture = bootstrap.connect(config.getHost(), config.getPort());
-        channelFuture.syncUninterruptibly();
     }
 
     private void checkConnection() {
@@ -105,8 +111,10 @@ public class BinaryTcpClient {
 	}
 
     void onDisconnect() {
-        log.info("Reconnecting...");
-        channelFuture.channel().eventLoop().schedule(this::tryConnect, 1000, TimeUnit.MILLISECONDS);
+        if (connected.get()) {
+            log.info("Reconnecting...");
+            channelFuture.channel().eventLoop().schedule(this::tryConnect, 1000, TimeUnit.MILLISECONDS);
+        }
     }
 
 	void onException(Throwable cause) {
@@ -114,6 +122,7 @@ public class BinaryTcpClient {
     }
 
 	public void close() {
+        connected.set(false);
         try {
             responseMap.clear();
             context.clear();

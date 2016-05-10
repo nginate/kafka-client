@@ -4,7 +4,5 @@ import lombok.Data;
 
 @Data
 public class TestProperties {
-    private Integer kafkaPort;
-    private Integer zookeeperPort;
     private Integer clientTimeout;
 }

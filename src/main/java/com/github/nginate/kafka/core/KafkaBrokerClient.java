@@ -4,7 +4,6 @@ import com.github.nginate.kafka.exceptions.CommunicationException;
 import com.github.nginate.kafka.network.client.BinaryMessageMetadata;
 import com.github.nginate.kafka.network.client.BinaryTcpClient;
 import com.github.nginate.kafka.network.client.BinaryTcpClientConfig;
-import com.github.nginate.kafka.protocol.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaSerializer;
 import com.github.nginate.kafka.protocol.messages.ApiVersion;
 import com.github.nginate.kafka.protocol.messages.Request;
@@ -33,6 +32,10 @@ public class KafkaBrokerClient implements Closeable {
 
     public void connect() {
         binaryTcpClient.connect();
+    }
+
+    public boolean isConnectionAlive() {
+        return binaryTcpClient.isConnectionAlive();
     }
 
     public CompletableFuture<TopicMetadataResponse> topicMetadata(String... topicNames) {
