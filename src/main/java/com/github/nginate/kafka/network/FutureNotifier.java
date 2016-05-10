@@ -28,7 +28,6 @@ import java.util.concurrent.CompletableFuture;
  * {@link GenericFutureListener} implementation which takes {@link CompletableFuture}s
  * and notifies it on completion.
  *
- * @param <V> the type of value returned by the future
  * @param <F> the type of future
  */
 public class FutureNotifier<F> implements FutureListener<F> {
