@@ -28,6 +28,9 @@ import static com.github.nginate.kafka.util.ReflectionUtils.doWithSortedFields;
 import static com.github.nginate.kafka.util.StringUtils.format;
 import static java.util.stream.IntStream.range;
 
+/**
+ * {@inheritDoc}
+ */
 public class KafkaSerializer implements BinaryMessageSerializer {
     private final Map<TypeName, BiConsumer<ByteBuf, Object>> serializers = new EnumMap<>(TypeName.class);
     private final Map<TypeName, BiFunction<ByteBuf, Class<?>, Object>> deserializers = new EnumMap<>(TypeName.class);
@@ -62,7 +65,7 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         deserializers.put(INT16, (buffer, clazz) -> buffer.readShort());
         deserializers.put(INT32, (buffer, clazz) -> buffer.readInt());
         deserializers.put(INT64, (buffer, clazz) -> buffer.readLong());
-        deserializers.put(STRING, (buffer, clazz) ->  {
+        deserializers.put(STRING, (buffer, clazz) -> {
             short size = buffer.readShort();
             if (size == -1) {
                 return null;
@@ -85,6 +88,9 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         deserializers.put(WRAPPER, this::deserializeObject);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void serialize(ByteBuf buf, Object message) throws SerializationException {
         Request request = (Request) message;
@@ -105,6 +111,9 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         buf.writeBytes(bodyBuffer);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object deserialize(ByteBuf buf, BinaryClientContext clientContext) throws SerializationException {
         buf.readInt();
