@@ -1,7 +1,6 @@
 package com.github.nginate.kafka.functional;
 
 import com.github.nginate.kafka.core.KafkaBrokerClient;
-import kafka.utils.ZkUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -25,8 +24,6 @@ public abstract class AbstractKafkaBrokerClientTest extends AbstractFunctionalTe
         waitUntil(10000, 1000, () -> client.isConnectionAlive());
 
         log.info("Connected to Kafka broker");
-
-        ZkUtils.setupCommonPaths(getZkClient());
 
         // waiting for broker registration in container
         waitUntil(10000, 1000, () -> !getZkClient().getChildren("/brokers/ids").isEmpty());

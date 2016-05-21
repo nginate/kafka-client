@@ -56,10 +56,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'org.testng:testng:6.9.11'
     testCompile 'org.assertj:assertj-core:3.4.1'
-    testCompile('me.jeffshaw.kafka:kafka_2.11:0.8.2.1') {
-        exclude group: 'log4j'
-        exclude group: 'org.slf4j'
-    }
     testCompile "com.github.nginate:commons-testing:1.0.0"
     testCompile "com.github.nginate:commons-docker:1.0.0"
 
