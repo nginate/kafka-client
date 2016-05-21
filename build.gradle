@@ -35,7 +35,6 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
     jcenter()
-    mavenLocal()
 }
 
 dependencies {
@@ -46,6 +45,9 @@ dependencies {
     compile 'com.google.guava:guava:19.0'
     compile 'org.apache.commons:commons-lang3:3.4'
     compile 'commons-beanutils:commons-beanutils:1.9.2'
+    compile "com.github.nginate:commons-lang:1.0.0"
+    compile "com.101tec:zkclient:0.3"
+    compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.4.5'
 
     // Annotation processors
     compile 'org.projectlombok:lombok:1.16.8', optional
@@ -58,7 +60,7 @@ dependencies {
         exclude group: 'log4j'
         exclude group: 'org.slf4j'
     }
-    testCompile "com.github.nginate:commons-lang:1.0.0"
+    testCompile "com.github.nginate:commons-testing:1.0.0"
     testCompile "com.github.nginate:commons-docker:1.0.0"
 
     testRuntime 'ch.qos.logback:logback-classic:1.1.7'
