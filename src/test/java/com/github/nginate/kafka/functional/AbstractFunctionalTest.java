@@ -44,6 +44,8 @@ public abstract class AbstractFunctionalTest {
     private String kafkaHost;
     @Getter
     private int kafkaPort;
+    @Getter
+    private int zookeeperPort;
 
     @BeforeSuite
     public void initProperties() throws Exception {
@@ -61,7 +63,7 @@ public abstract class AbstractFunctionalTest {
 
         kafkaHost = dockerHost;
         kafkaPort = KAFKA_PORT_COUNTER.getAndIncrement();
-        int zookeeperPort = ZOOKEEPER_PORT_COUNTER.getAndIncrement();
+        zookeeperPort = ZOOKEEPER_PORT_COUNTER.getAndIncrement();
 
         CreateContainerOptions kafkaContainerConfiguration =
                 kafkaContainerConfiguration(getKafkaBrokerVersion(), kafkaHost, kafkaPort, zookeeperPort);

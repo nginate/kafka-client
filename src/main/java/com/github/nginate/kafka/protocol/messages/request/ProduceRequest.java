@@ -44,6 +44,7 @@ public class ProduceRequest {
     private TopicProduceData[] topicProduceData;
 
     @Data
+    @Builder
     public static class TopicProduceData {
         /**
          * The topic that data is being published to.
@@ -55,6 +56,7 @@ public class ProduceRequest {
         private PartitionProduceData[] partitionProduceData;
 
         @Data
+        @Builder
         public static class PartitionProduceData {
             /**
              * The partition that data is being published to.

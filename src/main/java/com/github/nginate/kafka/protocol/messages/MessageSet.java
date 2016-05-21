@@ -1,16 +1,19 @@
 package com.github.nginate.kafka.protocol.messages;
 
 import com.github.nginate.kafka.protocol.types.Type;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 
 import static com.github.nginate.kafka.protocol.types.TypeName.*;
 
 @Data
 public class MessageSet {
     @Type(WRAPPER)
-    private MessageData[] messageData;
+    private MessageData[] messageDatas;
 
     @Data
+    @Builder
     public static class MessageData {
         /**
          * This is the offset used in kafka as the log sequence number. When the producer is sending messages it doesn't
@@ -24,6 +27,7 @@ public class MessageSet {
         private Message message;
 
         @Data
+        @Builder
         public static class Message {
             /**
              * The CRC is the CRC32 of the remainder of the message bytes. This is used to check the integrity of

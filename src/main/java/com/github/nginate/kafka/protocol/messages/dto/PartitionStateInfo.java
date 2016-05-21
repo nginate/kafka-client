@@ -1,6 +1,5 @@
 package com.github.nginate.kafka.protocol.messages.dto;
 
-import com.github.nginate.kafka.protocol.messages.request.LeaderAndIsrRequest;
 import com.github.nginate.kafka.protocol.types.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,7 @@ public class PartitionStateInfo {
     @Builder
     public static class LeaderIsrAndControllerEpoch {
         @Type(WRAPPER)
-        private LeaderIsrAndControllerEpoch.LeaderAndIsr leaderAndIsr;
+        private LeaderAndIsr leaderAndIsr;
         @Type(value = INT32, order = 1)
         private Integer controllerEpoch;
 
