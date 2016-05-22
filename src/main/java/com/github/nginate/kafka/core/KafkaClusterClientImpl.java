@@ -1,5 +1,6 @@
 package com.github.nginate.kafka.core;
 
+import com.github.nginate.kafka.exceptions.KafkaException;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData.Message;
@@ -8,6 +9,7 @@ import com.github.nginate.kafka.protocol.messages.request.ProduceRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.ProduceRequestBuilder;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData.PartitionProduceData;
+import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;
 import com.github.nginate.kafka.zookeeper.ZkBrokerInfo;
 import com.github.nginate.kafka.zookeeper.ZookeeperClient;
 import lombok.Synchronized;
@@ -15,11 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.zip.CRC32;
+
+import static com.github.nginate.kafka.util.StringUtils.format;
+import static java.util.Arrays.stream;
 
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
@@ -30,6 +34,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final ZookeeperClient zookeeperClient;
     private final Map<String, List<MessageHandler<?>>> handlers;
     private final Map<String, KafkaDeserializer> deserializers;
+    private final Map<Integer, KafkaBrokerClient> brokerClients; //TODO cache with TTL
     private final ProduceRequestBuilder produceRequestBuilder;
 
     public KafkaClusterClientImpl() {
@@ -42,6 +47,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         metadata = new ClusterMetadata();
         handlers = new HashMap<>();
         deserializers = new HashMap<>();
+        brokerClients = new ConcurrentHashMap<>();
         produceRequestBuilder = ProduceRequest.builder()
                 .requiredAcks(configuration.getRequiredAcks())
                 .timeout(configuration.getProduceTimeout());
@@ -95,25 +101,26 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
         ProduceRequest request = buildProduceRequest(topicProduceData);
 
-        log.debug("Sending produce request : {}", request);
-
-        //TODO find leader to send message
+        Broker broker = Optional.ofNullable(metadata.leaderFor(topic)).orElse(metadata.randomBroker());
+        log.debug("Sending produce request : {} to {}", request, broker);
+        executeWithBroker(broker, client -> client.produce(request)
+                .thenAccept(produceResponse -> {
+                    if (isProduceFailed(produceResponse)) {
+                        throw new KafkaException(format("Produce request failed : {}", produceResponse));
+                    }
+                }));
     }
 
     private ProduceRequest buildProduceRequest(TopicProduceData topicProduceData) {
-        TopicProduceData[] topicProduceDatas = {topicProduceData};
-
         ProduceRequest request = produceRequestBuilder.build();
-        request.setTopicProduceData(topicProduceDatas);
+        request.setTopicProduceData(new TopicProduceData[]{topicProduceData});
         return request;
     }
 
     private TopicProduceData buildTopicProduceData(String topic, PartitionProduceData partitionProduceData) {
-        PartitionProduceData[] partitionProduceDatas = {partitionProduceData};
-
         return TopicProduceData.builder()
                 .topic(topic)
-                .partitionProduceData(partitionProduceDatas)
+                .partitionProduceData(new PartitionProduceData[]{partitionProduceData})
                 .build();
     }
 
@@ -146,5 +153,18 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 .magicByte((byte) 0)
                 .value(rawKafkaMessage)
                 .build();
+    }
+
+    private boolean isProduceFailed(ProduceResponse response) {
+        return stream(response.getProduceResponseData())
+                .flatMap(data -> stream(data.getProduceResponsePartitionData()))
+                .filter(produceResponsePartitionData -> produceResponsePartitionData.getErrorCode() != -1)
+                .findAny()
+                .isPresent();
+    }
+
+    private void executeWithBroker(Broker broker, Consumer<KafkaBrokerClient> clientConsumer) {
+        clientConsumer.accept(brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+                new KafkaBrokerClient(broker.getHost(), broker.getPort())));
     }
 }
