@@ -45,6 +45,8 @@ public abstract class AbstractFunctionalTest {
     @Getter
     private int kafkaPort;
     @Getter
+    private String zookeeperHost;
+    @Getter
     private int zookeeperPort;
 
     @BeforeSuite
@@ -62,6 +64,7 @@ public abstract class AbstractFunctionalTest {
         NDockerClient dockerClient = DockerUtils.createClient(clientOptions);
 
         kafkaHost = dockerHost;
+        zookeeperHost = dockerHost;
         kafkaPort = KAFKA_PORT_COUNTER.getAndIncrement();
         zookeeperPort = ZOOKEEPER_PORT_COUNTER.getAndIncrement();
 

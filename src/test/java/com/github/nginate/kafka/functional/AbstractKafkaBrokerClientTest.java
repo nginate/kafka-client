@@ -21,7 +21,7 @@ public abstract class AbstractKafkaBrokerClientTest extends AbstractFunctionalTe
     public void prepareClient() throws Exception {
         client = new KafkaBrokerClient(getKafkaHost(), getKafkaPort());
 
-        waitUntil(10000, 1000, () -> client.isConnectionAlive());
+        waitUntil(10000, 1000, client::isConnectionAlive);
 
         log.info("Connected to Kafka broker");
 

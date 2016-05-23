@@ -19,7 +19,7 @@ public class ProduceConsume_0_9_IT extends AbstractKafkaBrokerClientTest {
     @BeforeClass
     public void beforeProduceConsumeIT() throws Exception {
         ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
-                .zookeeperUrl(format("{}:{}", "localhost", getZookeeperPort()))
+                .zookeeperUrl(format("{}:{}", getZookeeperHost(), getZookeeperPort()))
                 .build();
         kafkaClusterClient = new KafkaClusterClientImpl(clusterConfiguration, payload ->
                 payload.toString().getBytes(Charset.forName("UTF-8")));
