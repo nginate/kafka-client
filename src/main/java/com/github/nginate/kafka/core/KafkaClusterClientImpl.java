@@ -17,12 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.zip.CRC32;
 
 import static com.github.nginate.commons.lang.await.Await.waitUntil;
@@ -31,6 +27,7 @@ import static java.util.Arrays.stream;
 
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
+    private final ScheduledExecutorService poller = Executors.newSingleThreadScheduledExecutor();
     private final ClusterConfiguration configuration;
     private final KafkaSerializer serializer;
     private final ClusterMetadata metadata;
@@ -39,6 +36,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final Map<String, List<MessageHandler<?>>> handlers;
     private final Map<String, KafkaDeserializer> deserializers;
     private final Map<Integer, KafkaBrokerClient> brokerClients; //TODO cache with TTL
+    private final Map<String, ScheduledFuture<?>> pollingTasks = new HashMap<>();
     private final ProduceRequestBuilder produceRequestBuilder;
 
     public KafkaClusterClientImpl() {
@@ -74,15 +72,31 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     @Synchronized
     @Override
     public <T> void subscribeWith(String topic, KafkaDeserializer<T> deserializer, MessageHandler<T> messageHandler) {
-        boolean isCleanStart = handlers.isEmpty();
-
         handlers.putIfAbsent(topic, new ArrayList<>());
         handlers.get(topic).add(messageHandler);
         deserializers.put(topic, deserializer);
 
-        if (isCleanStart) {
-            // TODO start consumer scheduler
-        }
+        ScheduledFuture<?> scheduledFuture = poller.scheduleAtFixedRate(() -> {
+            List<Integer> topicBrokers = metadata.brokersForTopic(topic);
+            if (!topicBrokers.isEmpty()) {
+                Collections.shuffle(topicBrokers);
+                Integer nodeId = topicBrokers.get(0);
+
+                KafkaBrokerClient topicClient = brokerClients.computeIfAbsent(nodeId,
+                        integer ->
+                            metadata.brokerForId(integer).map(broker ->
+                                    new KafkaBrokerClient(broker.getHost(), broker.getPort())).orElse(null)
+                );
+                if (topicClient != null) {
+                    // TODO full poll flow
+                } else {
+                    log.warn("Broker for node id {} disappeared", nodeId);
+                }
+            } else {
+                log.warn("No available brokers for topic {}", topic);
+            }
+        }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
+        pollingTasks.put(topic, scheduledFuture);
     }
 
     @Synchronized
@@ -98,7 +112,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     @Override
     public CompletableFuture<Void> send(String topic, Object message) {
         return CompletableFuture.runAsync(() ->
-                    waitUntil(10000, () -> metadata.leaderFor(topic).orElse(metadata.randomBroker()) != null))
+                waitUntil(10000, () -> metadata.leaderFor(topic).orElse(metadata.randomBroker()) != null))
                 .thenRun(() -> {
                     byte[] rawKafkaMessage = serializer.serialize(message);
 

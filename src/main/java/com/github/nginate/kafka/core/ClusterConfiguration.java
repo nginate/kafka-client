@@ -9,6 +9,7 @@ public class ClusterConfiguration {
     private String zookeeperUrl;
     private Short requiredAcks;
     private Integer produceTimeout;
+    private Long pollingInterval;
 
     public static ClusterConfiguration defaultConfig() {
         return ClusterConfiguration.builder().build();

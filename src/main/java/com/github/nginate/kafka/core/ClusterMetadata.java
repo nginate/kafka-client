@@ -9,25 +9,26 @@ import lombok.Synchronized;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.function.Function.identity;
 
 @ThreadSafe
 class ClusterMetadata {
-    private final Map<Integer, Broker> clusterNodes = new HashMap<>();
-    private final Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
-    private final Map<String, Broker> topicLeaders = new HashMap<>();
-    private final Map<String, List<PartitionMetadata>> availablePartitionsByTopic = new HashMap<>();
+    private volatile Map<Integer, Broker> clusterNodes = new HashMap<>();
+    private volatile Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
+    private volatile Map<String, Broker> topicLeaders = new HashMap<>();
 
-    @Synchronized
     public void update(TopicMetadataResponse metadataResponse) {
-        cleanAll();
+        clusterNodes = stream(metadataResponse.getBrokers()).collect(Collectors.toMap(Broker::getNodeId, identity()));
 
-        for (Broker broker : metadataResponse.getBrokers()) {
-            clusterNodes.put(broker.getNodeId(), broker);
-        }
+        Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
+        Map<String, Broker> topicLeaders = new HashMap<>();
 
         stream(metadataResponse.getTopicMetadata()).forEach(topicMetadata -> {
             List<PartitionMetadata> partitionData = unmodifiableList(asList(topicMetadata.getPartitionMetadata()));
@@ -35,32 +36,36 @@ class ClusterMetadata {
 
             partitionData.stream()
                     .filter(partitionMetadata -> partitionMetadata.getLeader() >= 0)
-                    .findAny().ifPresent(partitionMetadata -> {
-                availablePartitionsByTopic.put(topicMetadata.getTopicName(), partitionData);
-                topicLeaders.put(topicMetadata.getTopicName(), clusterNodes.get(partitionMetadata.getLeader()));
-            });
+                    .findAny().ifPresent(partitionMetadata ->
+                    topicLeaders.put(topicMetadata.getTopicName(), clusterNodes.get(partitionMetadata.getLeader())));
         });
+
+        this.partitionsByTopic = partitionsByTopic;
+        this.topicLeaders = topicLeaders;
     }
 
-    private void cleanAll() {
-        clusterNodes.clear();
-        topicLeaders.clear();
-        partitionsByTopic.clear();
-        availablePartitionsByTopic.clear();
-    }
-
-    @Synchronized
     public Optional<Broker> leaderFor(String topic) {
         return Optional.ofNullable(topicLeaders.get(topic));
     }
 
-    @Synchronized
+    public List<Integer> brokersForTopic(String topic) {
+        return partitionsByTopic.getOrDefault(topic, emptyList())
+                .stream()
+                .flatMap(partitionMetadata -> stream(partitionMetadata.getReplicas()))
+                .collect(Collectors.toList());
+    }
+
+    public Optional<Broker> brokerForId(Integer nodeId) {
+        return Optional.ofNullable(clusterNodes.get(nodeId));
+    }
+
     public Broker randomBroker() {
-        if (clusterNodes.isEmpty()) {
+        List<Broker> nodes = new ArrayList<>(clusterNodes.values());
+
+        if (nodes.isEmpty()) {
             return null;
         }
 
-        List<Broker> nodes = new ArrayList<>(clusterNodes.values());
         Collections.shuffle(nodes);
         return nodes.iterator().next();
     }
