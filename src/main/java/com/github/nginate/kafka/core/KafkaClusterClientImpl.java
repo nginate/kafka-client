@@ -103,12 +103,16 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
 
         Broker broker = Optional.ofNullable(metadata.leaderFor(topic)).orElse(metadata.randomBroker());
         log.debug("Sending produce request : {} to {}", request, broker);
-        executeWithBroker(broker, client -> client.produce(request)
+
+        KafkaBrokerClient topicLeaderClient = brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+
+        topicLeaderClient.produce(request)
                 .thenAccept(produceResponse -> {
                     if (isProduceFailed(produceResponse)) {
                         throw new KafkaException(format("Produce request failed : {}", produceResponse));
                     }
-                }));
+                });
     }
 
     private ProduceRequest buildProduceRequest(TopicProduceData topicProduceData) {
@@ -161,10 +165,5 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 .filter(produceResponsePartitionData -> produceResponsePartitionData.getErrorCode() != -1)
                 .findAny()
                 .isPresent();
-    }
-
-    private void executeWithBroker(Broker broker, Consumer<KafkaBrokerClient> clientConsumer) {
-        clientConsumer.accept(brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
-                new KafkaBrokerClient(broker.getHost(), broker.getPort())));
     }
 }
