@@ -17,11 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.zip.CRC32;
 
+import static com.github.nginate.commons.lang.await.Await.waitUntil;
 import static com.github.nginate.kafka.util.StringUtils.format;
 import static java.util.Arrays.stream;
 
@@ -92,26 +96,30 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     }
 
     @Override
-    public void send(String topic, Object message) {
-        byte[] rawKafkaMessage = serializer.serialize(message);
+    public CompletableFuture<Void> send(String topic, Object message) {
+        return CompletableFuture.runAsync(() ->
+                    waitUntil(10000, () -> metadata.leaderFor(topic).orElse(metadata.randomBroker()) != null))
+                .thenRun(() -> {
+                    byte[] rawKafkaMessage = serializer.serialize(message);
 
-        Message kafkaMessage = buildMessage(rawKafkaMessage);
-        MessageData messageData = buildMessageData(kafkaMessage);
-        PartitionProduceData partitionProduceData = buildPartitionProduceData(messageData);
-        TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
-        ProduceRequest request = buildProduceRequest(topicProduceData);
+                    Message kafkaMessage = buildMessage(rawKafkaMessage);
+                    MessageData messageData = buildMessageData(kafkaMessage);
+                    PartitionProduceData partitionProduceData = buildPartitionProduceData(messageData);
+                    TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
+                    ProduceRequest request = buildProduceRequest(topicProduceData);
 
-        Broker broker = Optional.ofNullable(metadata.leaderFor(topic)).orElse(metadata.randomBroker());
-        log.debug("Sending produce request : {} to {}", request, broker);
+                    Broker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker());
+                    log.debug("Sending produce request : {} to {}", request, broker);
 
-        KafkaBrokerClient topicLeaderClient = brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
-                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+                    KafkaBrokerClient topicLeaderClient = brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+                            new KafkaBrokerClient(broker.getHost(), broker.getPort()));
 
-        topicLeaderClient.produce(request)
-                .thenAccept(produceResponse -> {
-                    if (isProduceFailed(produceResponse)) {
-                        throw new KafkaException(format("Produce request failed : {}", produceResponse));
-                    }
+                    topicLeaderClient.produce(request)
+                            .thenAccept(produceResponse -> {
+                                if (isProduceFailed(produceResponse)) {
+                                    throw new KafkaException(format("Produce request failed : {}", produceResponse));
+                                }
+                            });
                 });
     }
 

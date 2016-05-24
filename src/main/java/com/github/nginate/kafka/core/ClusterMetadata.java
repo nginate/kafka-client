@@ -50,17 +50,18 @@ class ClusterMetadata {
     }
 
     @Synchronized
-    public Broker leaderFor(String topic) {
-        return topicLeaders.get(topic);
+    public Optional<Broker> leaderFor(String topic) {
+        return Optional.ofNullable(topicLeaders.get(topic));
     }
 
     @Synchronized
     public Broker randomBroker() {
+        if (clusterNodes.isEmpty()) {
+            return null;
+        }
+
         List<Broker> nodes = new ArrayList<>(clusterNodes.values());
         Collections.shuffle(nodes);
-        if (nodes.isEmpty()) {
-            throw new KafkaException("There are no nodes in this cluster");
-        }
         return nodes.iterator().next();
     }
 }
