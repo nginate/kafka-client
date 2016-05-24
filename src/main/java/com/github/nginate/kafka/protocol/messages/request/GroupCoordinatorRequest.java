@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 /**
  * The offsets for a given consumer group are maintained by a specific broker called the group coordinator. i.e., a
@@ -15,7 +15,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.GROUP_COORDINATOR)
+@ApiKey(KafkaApiKeys.GROUP_COORDINATOR)
 public class GroupCoordinatorRequest {
     @Type(value = STRING, order = 4)
     private String groupId;

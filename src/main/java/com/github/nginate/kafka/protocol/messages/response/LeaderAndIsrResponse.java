@@ -1,15 +1,15 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.TopicAndPartitionStatus;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
-@ApiKey(ApiKeys.LEADER_AND_ISR)
+@ApiKey(KafkaApiKeys.LEADER_AND_ISR)
 public class LeaderAndIsrResponse {
     @Type(value = INT16, order = 2)
     private Short errorCode;

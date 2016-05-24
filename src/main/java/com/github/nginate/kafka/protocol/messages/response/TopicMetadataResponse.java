@@ -1,19 +1,19 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.Broker;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * The response contains metadata for each partition, with partitions grouped together by topic. This metadata refers to
  * brokers by their broker id. The brokers each have a host and port.
  */
 @Data
-@ApiKey(ApiKeys.METADATA)
+@ApiKey(KafkaApiKeys.METADATA)
 public class TopicMetadataResponse {
     @Type(value = WRAPPER, order = 2)
     private Broker[] brokers;

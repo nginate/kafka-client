@@ -1,6 +1,6 @@
 package com.github.nginate.kafka.network.client;
 
-import com.github.nginate.kafka.network.BinaryMessageSerializer;
+import com.github.nginate.kafka.serialization.BinaryMessageSerializer;
 import lombok.Builder;
 import lombok.Value;
 

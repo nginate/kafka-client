@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * The fetch API is used to fetch a chunk of one or more logs for some topic-partitions. Logically one specifies the
@@ -29,7 +29,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.FETCH)
+@ApiKey(KafkaApiKeys.FETCH)
 public class FetchRequest {
     /**
      * The replica id indicates the node id of the replica initiating this request. Normal client consumers should

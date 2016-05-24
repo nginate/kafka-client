@@ -1,6 +1,7 @@
-package com.github.nginate.kafka.protocol.types;
+package com.github.nginate.kafka.serialization;
 
 public enum TypeName {
+    BOOLEAN,
     /**
      *  Signed integer (1 byte) with the given precision (in bits) stored in big endian order.
      */

@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.network;
+package com.github.nginate.kafka.serialization;
 
 import com.github.nginate.kafka.exceptions.SerializationException;
 import com.github.nginate.kafka.network.client.BinaryClientContext;

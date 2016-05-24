@@ -1,7 +1,7 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import lombok.Builder;
 import lombok.Data;
 
@@ -39,6 +39,6 @@ import lombok.Data;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.CONTROLLED_SHUTDOWN)
+@ApiKey(KafkaApiKeys.CONTROLLED_SHUTDOWN)
 public class ControlledShutdownRequest {
 }

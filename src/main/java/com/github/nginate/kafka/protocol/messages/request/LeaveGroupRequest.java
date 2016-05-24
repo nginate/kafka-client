@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 /**
  * To explicitly leave a group, the client can send a leave group request. This is preferred over letting the session
@@ -15,7 +15,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.LEAVE_GROUP)
+@ApiKey(KafkaApiKeys.LEAVE_GROUP)
 public class LeaveGroupRequest {
     @Type(value = STRING, order = 4)
     private String groupId;

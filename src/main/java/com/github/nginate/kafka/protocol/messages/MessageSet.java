@@ -1,11 +1,10 @@
 package com.github.nginate.kafka.protocol.messages;
 
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Singular;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
 public class MessageSet {

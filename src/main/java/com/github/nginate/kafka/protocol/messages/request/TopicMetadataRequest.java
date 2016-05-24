@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 /**
  * This API answers the following questions:
@@ -23,7 +23,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.METADATA)
+@ApiKey(KafkaApiKeys.METADATA)
 public class TopicMetadataRequest {
     /**
      * The topics to produce metadata for. If empty the request will yield metadata for all topics.

@@ -1,13 +1,13 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.INT32;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 /**
  * Once a member has joined and synced, it will begin sending periodic heartbeats to keep itself in the group. If not
@@ -16,7 +16,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.HEARTBEAT)
+@ApiKey(KafkaApiKeys.HEARTBEAT)
 public class HeartbeatRequest {
     @Type(value = STRING, order = 4)
     private String groupId;

@@ -1,11 +1,11 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * The JoinGroup response includes an array for the members of the group along with their metadata. This is only
@@ -16,7 +16,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  * chosen by the coordinator.
  */
 @Data
-@ApiKey(ApiKeys.JOIN_GROUP)
+@ApiKey(KafkaApiKeys.JOIN_GROUP)
 public class JoinGroupResponse {
     @Type(value = INT16, order = 2)
     private Short errorCode;

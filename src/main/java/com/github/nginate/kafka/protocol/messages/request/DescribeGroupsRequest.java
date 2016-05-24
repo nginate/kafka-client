@@ -1,16 +1,16 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 @Data
 @Builder
-@ApiKey(ApiKeys.DESCRIBE_GROUPS)
+@ApiKey(KafkaApiKeys.DESCRIBE_GROUPS)
 public class DescribeGroupsRequest {
     @Type(value = STRING, order = 4)
     private String[] groupIds;

@@ -1,14 +1,14 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.TopicAndPartition;
-import com.github.nginate.kafka.protocol.types.Type;
-import com.github.nginate.kafka.protocol.types.TypeName;
+import com.github.nginate.kafka.serialization.Type;
+import com.github.nginate.kafka.serialization.TypeName;
 import lombok.Data;
 
 @Data
-@ApiKey(ApiKeys.DESCRIBE_GROUPS)
+@ApiKey(KafkaApiKeys.DESCRIBE_GROUPS)
 public class ControlledShutdownResponse {
     @Type(TypeName.INT16)
     private Short errorCode;

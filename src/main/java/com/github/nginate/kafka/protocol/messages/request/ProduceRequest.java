@@ -1,13 +1,13 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * The produce API is used to send message sets to the server. For efficiency it allows sending message sets intended
@@ -17,7 +17,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.PRODUCE)
+@ApiKey(KafkaApiKeys.PRODUCE)
 public class ProduceRequest {
     /**
      * This field indicates how many acknowledgements the servers should receive before responding to the request.

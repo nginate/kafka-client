@@ -1,11 +1,11 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.*;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics as in
@@ -32,7 +32,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ApiKey(ApiKeys.JOIN_GROUP)
+@ApiKey(KafkaApiKeys.JOIN_GROUP)
 public class JoinGroupRequest {
     @Type(value = STRING)
     private String groupId;

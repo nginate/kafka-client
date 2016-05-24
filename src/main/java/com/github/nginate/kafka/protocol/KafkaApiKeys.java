@@ -1,16 +1,16 @@
 package com.github.nginate.kafka.protocol;
 
-import lombok.Getter;
+import lombok.experimental.UtilityClass;
 
-@Getter
-public enum ApiKeys {
+@UtilityClass
+public class KafkaApiKeys {
     /**
      * The produce API is used to send message sets to the server. For efficiency it allows sending message sets
      * intended for many topic partitions in a single request. The produce API uses the generic message set format,
      * but since no offset has been assigned to the messages at the time of the send the producer is free to fill in
      * that field in any way it likes.
      */
-    PRODUCE((short)0),
+    public static final int PRODUCE = 0;
     /**
      * The fetch API is used to fetch a chunk of one or more logs for some topic-partitions. Logically one specifies the
      * topics, partitions, and starting offset at which to begin the fetch and gets back a chunk of messages. In general,
@@ -30,7 +30,7 @@ public enum ApiKeys {
      * will not allow dynamic reassignment of partitions should that consumer fail. We hope to address this gap in the
      * next major release.
      */
-    FETCH((short)1),
+    public static final int FETCH = 1;
     /**
      * This API describes the valid offset range available for a set of topic-partitions. As with the produce and fetch
      * APIs requests must be directed to the broker that is currently the leader for the partitions in question. This
@@ -39,7 +39,7 @@ public enum ApiKeys {
      * "log end offset" i.e. the offset of the next message that would be appended to the given partition. We agree that
      * this API is slightly funky.
      */
-    LIST_OFFSETS((short)2),
+    public static final int LIST_OFFSETS = 2;
     /**
      * This API answers the following questions:
      *  What topics exist?
@@ -54,29 +54,29 @@ public enum ApiKeys {
      * broker configuration, a topic metadata request will create the topic with the default replication factor and
      * number of partitions.
      */
-    METADATA((short)3),
-    LEADER_AND_ISR((short)4),
-    STOP_REPLICA((short)5),
-    UPDATE_METADATA((short)6),
+    public static final int METADATA = 3;
+    public static final int LEADER_AND_ISR = 4;
+    public static final int STOP_REPLICA = 5;
+    public static final int UPDATE_METADATA = 6;
     /**
      * Note that controlled shutdown will only succeed if all the partitions hosted on the broker have replicas
      * (i.e. the replication factor is greater than 1 and at least one of these replicas is alive). This is generally
      * what you want since shutting down the last replica would make that topic partition unavailable.
      */
-    CONTROLLED_SHUTDOWN((short) 7),
+    public static final int CONTROLLED_SHUTDOWN = 7;
     /**
      * This api saves out the consumer's position in the stream for one or more partitions. In the scala API this
      * happens when the consumer calls commit() or in the background if "autocommit" is enabled. This is the position
      * the consumer will pick up from if it crashes before its next commit().
      */
-    OFFSET_COMMIT((short)8),
+    public static final int OFFSET_COMMIT = 8;
     /**
      * This api reads back a consumer position previously written using the OffsetCommit api. Note that if there is no
      * offset associated with a topic-partition under that consumer group the broker does not set an error code (since
      * it is not really an error), but returns empty metadata and sets the offset field to -1.
      */
-    OFFSET_FETCH((short)9),
-    GROUP_COORDINATOR((short)10), //FIXME CONSUMER_METADATA in server
+    public static final int OFFSET_FETCH = 9;
+    public static final int GROUP_COORDINATOR = 10; //FIXME CONSUMER_METADATA in server
     /**
      * The purpose of the initial phase is to set the active members of the group. This protocol has similar semantics
      * as in the initial consumer rewrite design. After finding the coordinator for the group, each member sends a
@@ -92,21 +92,15 @@ public enum ApiKeys {
      * upgrade scenario. The newer version will provide metadata for the new protocol and for the old protocol, and the
      * coordinator will choose the old protocol until all members have been upgraded.
      */
-    JOIN_GROUP((short)11),
+    public static final int JOIN_GROUP = 11;
     /**
      * Once a member has joined and synced, it will begin sending periodic heartbeats to keep itself in the group. If
      * not heartbeat has been received by the coordinator with the configured session timeout, the member will be kicked
      * out of the group.
      */
-    HEARTBEAT((short)12),
-    LEAVE_GROUP((short)13),
-    SYNC_GROUP((short)14),
-    DESCRIBE_GROUPS((short)15),
-    LIST_GROUPS((short)16);
-
-    private final short id;
-
-    ApiKeys(short id) {
-        this.id = id;
-    }
+    public static final int HEARTBEAT = 12;
+    public static final int LEAVE_GROUP = 13;
+    public static final int SYNC_GROUP = 14;
+    public static final int DESCRIBE_GROUPS = 15;
+    public static final int LIST_GROUPS = 16;
 }

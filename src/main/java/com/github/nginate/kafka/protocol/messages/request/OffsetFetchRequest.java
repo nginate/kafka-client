@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * This api reads back a consumer position previously written using the OffsetCommit api. Note that if there is no
@@ -15,7 +15,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.OFFSET_FETCH)
+@ApiKey(KafkaApiKeys.OFFSET_FETCH)
 public class OffsetFetchRequest {
     @Type(value = STRING, order = 4)
     private String consumerGroup;

@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.protocol.types;
+package com.github.nginate.kafka.serialization;
 
 import java.lang.annotation.*;
 

@@ -1,11 +1,11 @@
 package com.github.nginate.kafka.protocol.messages;
 
 import com.github.nginate.kafka.network.AnswerableMessage;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * Field order starts with 1 because of Message size field

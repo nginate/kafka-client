@@ -1,14 +1,13 @@
 package com.github.nginate.kafka.protocol.messages.dto;
 
-import com.github.nginate.kafka.protocol.types.Type;
-import com.github.nginate.kafka.protocol.types.TypeName;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.INT32;
-import static com.github.nginate.kafka.protocol.types.TypeName.STRING;
+import static com.github.nginate.kafka.serialization.TypeName.INT32;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 @Data
 @Builder

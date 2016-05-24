@@ -1,15 +1,15 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
-@ApiKey(ApiKeys.FETCH)
+@ApiKey(KafkaApiKeys.FETCH)
 public class FetchResponse {
     @Type(value = WRAPPER, order = 2)
     private FetchResponseTopicData[] topicData;

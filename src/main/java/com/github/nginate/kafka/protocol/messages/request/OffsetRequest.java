@@ -1,12 +1,12 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 /**
  * This API describes the valid offset range available for a set of topic-partitions. As with the produce and fetch
@@ -18,7 +18,7 @@ import static com.github.nginate.kafka.protocol.types.TypeName.*;
  */
 @Data
 @Builder
-@ApiKey(ApiKeys.LIST_OFFSETS)
+@ApiKey(KafkaApiKeys.LIST_OFFSETS)
 public class OffsetRequest {
     @Type(value = INT32, order = 4)
     private Integer replicaId;

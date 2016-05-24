@@ -1,17 +1,17 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.dto.Broker;
 import com.github.nginate.kafka.protocol.messages.dto.PartitionStateInfoWrapper;
-import com.github.nginate.kafka.protocol.types.Type;
-import com.github.nginate.kafka.protocol.types.TypeName;
+import com.github.nginate.kafka.serialization.Type;
+import com.github.nginate.kafka.serialization.TypeName;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-@ApiKey(ApiKeys.UPDATE_METADATA)
+@ApiKey(KafkaApiKeys.UPDATE_METADATA)
 public class UpdateMetadataRequest {
     @Type(TypeName.INT32)
     private Integer controllerId;

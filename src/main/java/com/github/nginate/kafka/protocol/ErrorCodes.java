@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
  * Kafka protocol errors</a>
  */
 @UtilityClass
-public final class ErrorCodes {
+public class ErrorCodes {
     /**
      * No error--it worked!
      */

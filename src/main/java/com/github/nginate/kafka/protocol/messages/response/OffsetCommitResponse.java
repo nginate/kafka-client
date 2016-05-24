@@ -1,14 +1,14 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.protocol.ApiKey;
-import com.github.nginate.kafka.protocol.ApiKeys;
-import com.github.nginate.kafka.protocol.types.Type;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
-@ApiKey(ApiKeys.OFFSET_COMMIT)
+@ApiKey(KafkaApiKeys.OFFSET_COMMIT)
 public class OffsetCommitResponse {
     @Type(value = WRAPPER, order = 2)
     private OffsetCommitResponseTopicData[] topicData;

@@ -1,13 +1,10 @@
-package com.github.nginate.kafka.protocol;
+package com.github.nginate.kafka.serialization;
 
 import com.github.nginate.kafka.exceptions.SerializationException;
-import com.github.nginate.kafka.network.BinaryMessageSerializer;
 import com.github.nginate.kafka.network.client.BinaryClientContext;
 import com.github.nginate.kafka.network.client.BinaryMessageMetadata;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
-import com.github.nginate.kafka.protocol.types.Type;
-import com.github.nginate.kafka.protocol.types.TypeName;
 import com.google.common.base.Charsets;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -23,7 +20,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-import static com.github.nginate.kafka.protocol.types.TypeName.*;
+import static com.github.nginate.kafka.serialization.TypeName.*;
 import static com.github.nginate.kafka.util.ReflectionUtils.doWithSortedFields;
 import static com.github.nginate.kafka.util.StringUtils.format;
 import static java.util.stream.IntStream.range;
@@ -31,7 +28,7 @@ import static java.util.stream.IntStream.range;
 /**
  * {@inheritDoc}
  */
-public class KafkaSerializer implements BinaryMessageSerializer {
+public class BinaryMessageSerializerImpl implements BinaryMessageSerializer {
     private final Map<TypeName, BiConsumer<ByteBuf, Object>> serializers = new EnumMap<>(TypeName.class);
     private final Map<TypeName, BiFunction<ByteBuf, Class<?>, Object>> deserializers = new EnumMap<>(TypeName.class);
 
@@ -39,6 +36,7 @@ public class KafkaSerializer implements BinaryMessageSerializer {
     private final Comparator<Field> comparator = Comparator.comparing(field -> field.getAnnotation(Type.class).order());
 
     {
+        serializers.put(BOOLEAN, (buffer, o) -> buffer.writeBoolean((boolean) Optional.ofNullable(o).orElse(0)));
         serializers.put(INT8, (buffer, o) -> buffer.writeByte((byte) Optional.ofNullable(o).orElse((byte) -1)));
         serializers.put(INT16, (buffer, o) -> buffer.writeShort((short) Optional.ofNullable(o).orElse((short) -1)));
         serializers.put(INT32, (buffer, o) -> buffer.writeInt((int) Optional.ofNullable(o).orElse(-1)));
@@ -61,6 +59,7 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         });
         serializers.put(WRAPPER, this::serializeObject);
 
+        deserializers.put(BOOLEAN, (buffer, clazz) -> buffer.readBoolean());
         deserializers.put(INT8, (buffer, clazz) -> buffer.readByte());
         deserializers.put(INT16, (buffer, clazz) -> buffer.readShort());
         deserializers.put(INT32, (buffer, clazz) -> buffer.readInt());
@@ -104,7 +103,7 @@ public class KafkaSerializer implements BinaryMessageSerializer {
         }
 
         ByteBuf bodyBuffer = Unpooled.buffer();
-        bodyBuffer.writeShort(apiKeyAnnotation.value().getId());
+        bodyBuffer.writeShort(apiKeyAnnotation.value());
         serializeObject(bodyBuffer, message);
         serializeObject(bodyBuffer, requestMessage);
         buf.writeInt(bodyBuffer.readableBytes());

@@ -2,6 +2,7 @@ package com.github.nginate.kafka.network;
 
 
 import com.github.nginate.kafka.exceptions.SerializationException;
+import com.github.nginate.kafka.serialization.BinaryMessageSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;

@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.protocol;
+package com.github.nginate.kafka.serialization;
 
 import java.lang.annotation.*;
 
@@ -6,5 +6,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ApiKey {
-    ApiKeys value();
+    int value();
 }
