@@ -1,10 +1,12 @@
 package com.github.nginate.kafka.core;
 
 import com.github.nginate.kafka.exceptions.KafkaException;
+import com.github.nginate.kafka.protocol.ErrorCodes;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData.Message;
 import com.github.nginate.kafka.protocol.messages.dto.Broker;
+import com.github.nginate.kafka.protocol.messages.request.JoinGroupRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.ProduceRequestBuilder;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData;
@@ -19,6 +21,7 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
 import static com.github.nginate.commons.lang.await.Await.waitUntil;
@@ -28,6 +31,8 @@ import static java.util.Arrays.stream;
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final ScheduledExecutorService poller = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
+
     private final ClusterConfiguration configuration;
     private final KafkaSerializer serializer;
     private final ClusterMetadata metadata;
@@ -76,25 +81,47 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         handlers.get(topic).add(messageHandler);
         deserializers.put(topic, deserializer);
 
-        ScheduledFuture<?> scheduledFuture = poller.scheduleAtFixedRate(() -> {
-            List<Integer> topicBrokers = metadata.brokersForTopic(topic);
-            if (!topicBrokers.isEmpty()) {
-                Collections.shuffle(topicBrokers);
-                Integer nodeId = topicBrokers.get(0);
+        metadata.initTopicLog(topic, configuration.getDefaultGeneration());
 
-                KafkaBrokerClient topicClient = brokerClients.computeIfAbsent(nodeId,
-                        integer ->
-                            metadata.brokerForId(integer).map(broker ->
-                                    new KafkaBrokerClient(broker.getHost(), broker.getPort())).orElse(null)
-                );
-                if (topicClient != null) {
-                    // TODO full poll flow
-                } else {
-                    log.warn("Broker for node id {} disappeared", nodeId);
+        ScheduledFuture<?> scheduledFuture = poller.scheduleAtFixedRate(() -> {
+            Broker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
+                Broker randomBroker = metadata.randomBroker();
+                AtomicReference<Broker> coordinatorRef = new AtomicReference<>(null);
+                if (randomBroker != null) {
+                    KafkaBrokerClient client = getKafkaBrokerClient(randomBroker);
+                    client.getGroupCoordinator(configuration.getConsumerGroupId())
+                            .whenComplete((response, throwable) -> {
+                                if (response != null) {
+                                    short errorCode = response.getErrorCode();
+                                    if (errorCode == ErrorCodes.NO_ERROR) {
+                                        coordinatorRef.set(response.getCoordinator());
+                                        //TODO schedule heartbeats
+                                    }
+                                }
+                            });
                 }
-            } else {
-                log.warn("No available brokers for topic {}", topic);
-            }
+
+                return coordinatorRef.get();
+            });
+
+            metadata.checkGroupJoined(configuration.getConsumerGroupId(), () -> {
+                KafkaBrokerClient coordinatorClient = getKafkaBrokerClient(coordinator);
+                AtomicReference<String> memberIdRef = new AtomicReference<>(null);
+
+                JoinGroupRequest request = JoinGroupRequest.builder().build();
+                coordinatorClient.joinGroup(request).whenComplete((response, throwable) -> {
+                    if (response != null) {
+                        short errorCode = response.getErrorCode();
+                        if (errorCode == ErrorCodes.NO_ERROR) {
+                            memberIdRef.set(response.getMemberId());
+                            //TODO find out what to do with other data
+                        }
+                    }
+                });
+
+                return memberIdRef.get();
+            });
+
         }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
         pollingTasks.put(topic, scheduledFuture);
     }
@@ -125,8 +152,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                     Broker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker());
                     log.debug("Sending produce request : {} to {}", request, broker);
 
-                    KafkaBrokerClient topicLeaderClient = brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
-                            new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+                    KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
 
                     topicLeaderClient.produce(request)
                             .thenAccept(produceResponse -> {
@@ -135,6 +161,11 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                                 }
                             });
                 });
+    }
+
+    private KafkaBrokerClient getKafkaBrokerClient(Broker broker) {
+        return brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }
 
     private ProduceRequest buildProduceRequest(TopicProduceData topicProduceData) {

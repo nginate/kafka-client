@@ -9,7 +9,10 @@ import lombok.Synchronized;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
@@ -23,6 +26,9 @@ class ClusterMetadata {
     private volatile Map<Integer, Broker> clusterNodes = new HashMap<>();
     private volatile Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
     private volatile Map<String, Broker> topicLeaders = new HashMap<>();
+    private final Map<String, Broker> groupCoordinators = new ConcurrentHashMap<>();
+    private final Map<String, String> groupMemberIds = new ConcurrentHashMap<>();
+    private volatile Map<String, AtomicInteger> topicGenerations = new HashMap<>();
 
     public void update(TopicMetadataResponse metadataResponse) {
         clusterNodes = stream(metadataResponse.getBrokers()).collect(Collectors.toMap(Broker::getNodeId, identity()));
@@ -42,6 +48,14 @@ class ClusterMetadata {
 
         this.partitionsByTopic = partitionsByTopic;
         this.topicLeaders = topicLeaders;
+    }
+
+    public void initTopicLog(String topic, int defaultGeneration) {
+        topicGenerations.put(topic, new AtomicInteger(defaultGeneration));
+    }
+
+    public Integer generationForTopic(String topic) {
+        return topicGenerations.get(topic).get();
     }
 
     public Optional<Broker> leaderFor(String topic) {
@@ -68,5 +82,13 @@ class ClusterMetadata {
 
         Collections.shuffle(nodes);
         return nodes.iterator().next();
+    }
+
+    public Broker computeCoordinatorIfAbsent(String topic, Supplier<Broker> coordinatorSupplier) {
+        return groupCoordinators.computeIfAbsent(topic, s -> coordinatorSupplier.get());
+    }
+
+    public void checkGroupJoined(String groupId, Supplier<String> memberIdSupplier) {
+        groupMemberIds.computeIfAbsent(groupId, s -> memberIdSupplier.get());
     }
 }
