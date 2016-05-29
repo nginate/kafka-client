@@ -1,8 +1,9 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.PRODUCE)
+@ApiVersion(2)
 public class ProduceRequest {
     /**
      * This field indicates how many acknowledgements the servers should receive before responding to the request.

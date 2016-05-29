@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
 @ApiKey(KafkaApiKeys.OFFSET_FETCH)
+@ApiVersion(1)
 public class OffsetFetchResponse {
     @Type(value = WRAPPER, order = 2)
     private OffsetFetchResponseTopicData[] topicData;

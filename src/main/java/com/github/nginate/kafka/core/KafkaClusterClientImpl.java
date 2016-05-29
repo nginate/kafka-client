@@ -5,13 +5,14 @@ import com.github.nginate.kafka.protocol.ErrorCodes;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData.Message;
-import com.github.nginate.kafka.protocol.messages.dto.Broker;
 import com.github.nginate.kafka.protocol.messages.request.JoinGroupRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.ProduceRequestBuilder;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData.PartitionProduceData;
+import com.github.nginate.kafka.protocol.messages.response.GroupCoordinatorResponse.GroupCoordinatorBroker;
 import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;
+import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadataBroker;
 import com.github.nginate.kafka.zookeeper.ZkBrokerInfo;
 import com.github.nginate.kafka.zookeeper.ZookeeperClient;
 import lombok.Synchronized;
@@ -84,11 +85,11 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         metadata.initTopicLog(topic, configuration.getDefaultGeneration());
 
         ScheduledFuture<?> scheduledFuture = poller.scheduleAtFixedRate(() -> {
-            Broker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
-                Broker randomBroker = metadata.randomBroker();
-                AtomicReference<Broker> coordinatorRef = new AtomicReference<>(null);
-                if (randomBroker != null) {
-                    KafkaBrokerClient client = getKafkaBrokerClient(randomBroker);
+            GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
+                Optional<TopicMetadataBroker> randomBroker = metadata.randomBroker();
+                AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>();
+                if (randomBroker.isPresent()) {
+                    KafkaBrokerClient client = getKafkaBrokerClient(randomBroker.get());
                     client.getGroupCoordinator(configuration.getConsumerGroupId())
                             .whenComplete((response, throwable) -> {
                                 if (response != null) {
@@ -139,7 +140,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     @Override
     public CompletableFuture<Void> send(String topic, Object message) {
         return CompletableFuture.runAsync(() ->
-                waitUntil(10000, () -> metadata.leaderFor(topic).orElse(metadata.randomBroker()) != null))
+                waitUntil(10000, () -> metadata.leaderFor(topic).isPresent() || metadata.randomBroker().isPresent()))
                 .thenRun(() -> {
                     byte[] rawKafkaMessage = serializer.serialize(message);
 
@@ -149,7 +150,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                     TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
                     ProduceRequest request = buildProduceRequest(topicProduceData);
 
-                    Broker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker());
+                    TopicMetadataBroker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker().orElse(null));
                     log.debug("Sending produce request : {} to {}", request, broker);
 
                     KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
@@ -163,7 +164,17 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 });
     }
 
-    private KafkaBrokerClient getKafkaBrokerClient(Broker broker) {
+    @Override
+    public void close() {
+        // TODO: impl
+    }
+
+    private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {
+        return brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+    }
+
+    private KafkaBrokerClient getKafkaBrokerClient(GroupCoordinatorBroker broker) {
         return brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
                 new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }

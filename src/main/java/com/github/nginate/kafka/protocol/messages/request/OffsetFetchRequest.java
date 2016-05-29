@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.OFFSET_FETCH)
+@ApiVersion(1)
 public class OffsetFetchRequest {
     @Type(value = STRING, order = 4)
     private String consumerGroup;

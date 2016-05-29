@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.SYNC_GROUP)
+@ApiVersion(0)
 public class SyncGroupRequest {
     @Type(value = STRING, order = 4)
     private String groupId;

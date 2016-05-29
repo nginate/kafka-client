@@ -1,9 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
-import com.github.nginate.kafka.protocol.messages.ApiVersion;
-import com.github.nginate.kafka.protocol.messages.Versioned;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -32,17 +31,15 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.OFFSET_COMMIT)
+@ApiVersion(2)
 public class OffsetCommitRequest {
     @Type(value = STRING, order = 4)
     private String consumerGroupId;
     @Type(value = INT32, order = 5)
-    @Versioned(since = ApiVersion.V1)
     private Integer consumerGroupGenerationId;
     @Type(value = STRING, order = 6)
-    @Versioned(since = ApiVersion.V1)
     private String consumerId;
     @Type(value = INT64, order = 7)
-    @Versioned(since = ApiVersion.V2)
     private Long retentionTime;
     @Type(value = WRAPPER, order = 8)
     private OffsetCommitRequestTopicData[] topicData;
@@ -61,7 +58,6 @@ public class OffsetCommitRequest {
             @Type(value = INT64, order = 1)
             private Long offset;
             @Type(value = INT64, order = 2)
-            @Versioned(includesVersions = ApiVersion.V1)
             private Long timestamp;
             @Type(value = STRING, order = 3)
             private String metadata;

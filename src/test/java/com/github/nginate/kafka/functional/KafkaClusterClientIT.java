@@ -3,6 +3,7 @@ package com.github.nginate.kafka.functional;
 import com.github.nginate.kafka.core.ClusterConfiguration;
 import com.github.nginate.kafka.core.KafkaClusterClient;
 import com.github.nginate.kafka.core.KafkaClusterClientImpl;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -13,11 +14,11 @@ import java.util.concurrent.TimeUnit;
 import static com.github.nginate.kafka.util.StringUtils.format;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ProduceConsume_0_9_IT extends AbstractKafkaBrokerClientTest {
+public class KafkaClusterClientIT extends AbstractFunctionalTest {
     private KafkaClusterClient kafkaClusterClient;
 
-    @BeforeClass
-    public void beforeProduceConsumeIT() throws Exception {
+    @BeforeClass(dependsOnMethods = "initDockerContainer")
+    public void prepareClient() throws Exception {
         ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
                 .zookeeperUrl(format("{}:{}", getZookeeperHost(), getZookeeperPort()))
                 .build();
@@ -25,9 +26,9 @@ public class ProduceConsume_0_9_IT extends AbstractKafkaBrokerClientTest {
                 payload.toString().getBytes(Charset.forName("UTF-8")));
     }
 
-    @Override
-    protected String getKafkaBrokerVersion() {
-        return "0.9";
+    @AfterClass(alwaysRun = true)
+    public void tearDownClient() throws Exception {
+        kafkaClusterClient.close();
     }
 
     @Test
@@ -43,5 +44,10 @@ public class ProduceConsume_0_9_IT extends AbstractKafkaBrokerClientTest {
 
         String retrieved = listenerFuture.get(20, TimeUnit.SECONDS);
         assertThat(retrieved).isEqualTo(stringMessage);
+    }
+
+    @Override
+    protected String getKafkaBrokerVersion() {
+        return "0.10";
     }
 }

@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -24,10 +25,11 @@ import static com.github.nginate.kafka.serialization.TypeName.STRING;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.METADATA)
+@ApiVersion(1)
 public class TopicMetadataRequest {
     /**
-     * The topics to produce metadata for. If empty the request will yield metadata for all topics.
+     * An array of topics to fetch metadata for. If the topics array is null fetch metadata for all topics.
      */
     @Type(value = STRING, order = 4)
-    private String[] topic;
+    private String[] topics;
 }

@@ -103,4 +103,6 @@ public class KafkaApiKeys {
     public static final int SYNC_GROUP = 14;
     public static final int DESCRIBE_GROUPS = 15;
     public static final int LIST_GROUPS = 16;
+    public static final int SASL_HANDSHAKE = 17;
+    public static final int API_VERSIONS = 18;
 }

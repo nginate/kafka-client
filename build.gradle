@@ -145,16 +145,13 @@ publishing {
     }
 }
 
-task pullKafkaImage_0_8(type: DockerPullImage) {
-    repository = 'nginate/kafka-docker-bundle:0.8'
-}
 
-task pullKafkaImage_0_9(type: DockerPullImage) {
-    repository = 'nginate/kafka-docker-bundle:0.9'
+task pullKafkaImage_0_10(type: DockerPullImage) {
+    repository = 'nginate/kafka-docker-bundle:0.10'
 }
 
 task pullDockerImages {
-    dependsOn ':pullKafkaImage_0_8', ':pullKafkaImage_0_9'
+    dependsOn ':pullKafkaImage_0_10'
 }
 
 task wrapper(type: Wrapper) {

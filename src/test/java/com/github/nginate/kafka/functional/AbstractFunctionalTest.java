@@ -22,6 +22,10 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.nginate.commons.lang.NStrings.format;
@@ -85,6 +89,16 @@ public abstract class AbstractFunctionalTest {
         kafkaContainer.stop();
         kafkaContainer.printLogs();
         kafkaContainer.remove();
+    }
+
+    protected <T> T await(CompletableFuture<T> completableFuture)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        return await(completableFuture, getTestProperties().getClientTimeout());
+    }
+
+    protected <T> T await(CompletableFuture<T> completableFuture, int timeout)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        return completableFuture.get(timeout, TimeUnit.MILLISECONDS);
     }
 
     protected abstract String getKafkaBrokerVersion();

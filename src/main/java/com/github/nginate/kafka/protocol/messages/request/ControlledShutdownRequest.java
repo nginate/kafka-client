@@ -1,9 +1,13 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
+
+import static com.github.nginate.kafka.serialization.TypeName.INT32;
 
 /**
  * In Kafka 0.8.0, was added a configurable controlled shutdown feature (controlled.shutdown.enable) that reduces
@@ -40,5 +44,11 @@ import lombok.Data;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.CONTROLLED_SHUTDOWN)
+@ApiVersion(1)
 public class ControlledShutdownRequest {
+    /**
+     * The id of the broker for which controlled shutdown has been requested.
+     */
+    @Type(value = INT32, order = 4)
+    private Integer brokerId;
 }

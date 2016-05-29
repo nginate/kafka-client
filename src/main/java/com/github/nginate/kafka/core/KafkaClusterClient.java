@@ -9,4 +9,6 @@ public interface KafkaClusterClient {
     void unSubscribeFrom(String topic);
 
     CompletableFuture<Void> send(String topic, Object message);
+
+    void close();
 }

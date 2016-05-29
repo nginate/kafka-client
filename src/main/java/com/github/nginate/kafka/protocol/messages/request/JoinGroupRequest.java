@@ -1,9 +1,13 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import static com.github.nginate.kafka.serialization.TypeName.*;
 
@@ -33,15 +37,24 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ApiKey(KafkaApiKeys.JOIN_GROUP)
+@ApiVersion(0)
 public class JoinGroupRequest {
-    @Type(value = STRING)
-    private String groupId;
-    @Type(value = INT32, order = 1)
-    private Integer sessionTimeout;
-    @Type(value = STRING, order = 2)
-    private String[] topics;
-    @Type(value = STRING, order = 3)
-    private String consumerId;
     @Type(value = STRING, order = 4)
-    private String strategy;
+    private String groupId;
+    @Type(value = INT32, order = 5)
+    private Integer sessionTimeout;
+    @Type(value = STRING, order = 6)
+    private String memberId;
+    @Type(value = STRING, order = 7)
+    private String protocolType;
+    @Type(value = WRAPPER, order = 8)
+    private GroupProtocols[] groupProtocols;
+
+    @Data
+    public static class GroupProtocols {
+        @Type(STRING)
+        private String protocolType;
+        @Type(value = BYTES, order = 1)
+        private byte[] protocolMetadata;
+    }
 }

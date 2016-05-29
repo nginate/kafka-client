@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.request;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,7 @@ import static com.github.nginate.kafka.serialization.TypeName.STRING;
 @Data
 @Builder
 @ApiKey(KafkaApiKeys.LEAVE_GROUP)
+@ApiVersion(0)
 public class LeaveGroupRequest {
     @Type(value = STRING, order = 4)
     private String groupId;

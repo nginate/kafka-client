@@ -3,16 +3,20 @@ package com.github.nginate.kafka.protocol.messages.request;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
 import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.serialization.ApiVersion;
+import com.github.nginate.kafka.serialization.Type;
 import lombok.Builder;
 import lombok.Data;
 
-/**
- * This API can be used to find the current groups managed by a broker. To get a list of all groups in the cluster, you
- * must send ListGroup to all brokers.
- */
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
+
 @Data
 @Builder
-@ApiKey(KafkaApiKeys.LIST_GROUPS)
+@ApiKey(KafkaApiKeys.SASL_HANDSHAKE)
 @ApiVersion(0)
-public class ListGroupsRequest {
+public class SASLHanshakeRequest {
+    /**
+     * SASL Mechanism chosen by the client.
+     */
+    @Type(STRING)
+    private String mechanism;
 }

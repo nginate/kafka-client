@@ -1,21 +1,23 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
-import com.github.nginate.kafka.protocol.messages.dto.TopicAndPartitionStatus;
 import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
 import static com.github.nginate.kafka.serialization.TypeName.INT16;
-import static com.github.nginate.kafka.serialization.TypeName.WRAPPER;
+import static com.github.nginate.kafka.serialization.TypeName.STRING;
 
 @Data
-@ApiKey(KafkaApiKeys.LEADER_AND_ISR)
+@ApiKey(KafkaApiKeys.SASL_HANDSHAKE)
 @ApiVersion(0)
-public class LeaderAndIsrResponse {
-    @Type(value = INT16, order = 2)
+public class SASLHanshakeResponse {
+    @Type(INT16)
     private Short errorCode;
-    @Type(value = WRAPPER, order = 3)
-    private TopicAndPartitionStatus[] statuses;
+    /**
+     * Array of mechanisms enabled in the server.
+     */
+    @Type(value = STRING, order = 1)
+    private String[] enabledMechanisms;
 }

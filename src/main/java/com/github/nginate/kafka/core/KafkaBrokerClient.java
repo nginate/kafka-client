@@ -4,15 +4,16 @@ import com.github.nginate.kafka.exceptions.CommunicationException;
 import com.github.nginate.kafka.network.client.BinaryMessageMetadata;
 import com.github.nginate.kafka.network.client.BinaryTcpClient;
 import com.github.nginate.kafka.network.client.BinaryTcpClientConfig;
-import com.github.nginate.kafka.serialization.BinaryMessageSerializerImpl;
-import com.github.nginate.kafka.protocol.messages.ApiVersion;
 import com.github.nginate.kafka.protocol.messages.Request;
 import com.github.nginate.kafka.protocol.messages.Response;
 import com.github.nginate.kafka.protocol.messages.request.*;
 import com.github.nginate.kafka.protocol.messages.response.*;
+import com.github.nginate.kafka.serialization.ApiVersion;
+import com.github.nginate.kafka.serialization.BinaryMessageSerializerImpl;
 import com.google.common.base.Throwables;
 
 import java.io.Closeable;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +38,7 @@ public class KafkaBrokerClient implements Closeable {
     }
 
     public CompletableFuture<TopicMetadataResponse> topicMetadata(String... topicNames) {
-        TopicMetadataRequest request = TopicMetadataRequest.builder().topic(topicNames).build();
+        TopicMetadataRequest request = TopicMetadataRequest.builder().topics(topicNames).build();
         return topicMetadata(request);
     }
 
@@ -112,10 +113,26 @@ public class KafkaBrokerClient implements Closeable {
         return sendAndReceive(request, ControlledShutdownResponse.class);  //TODO transform error codes into exceptions
     }
 
+    public CompletableFuture<SASLHanshakeResponse> saslHandshake(SASLHanshakeRequest request) {
+        return sendAndReceive(request, SASLHanshakeResponse.class);  //TODO transform error codes into exceptions
+    }
+
+    public CompletableFuture<ApiVersionsResponse> apiVersions() {
+        ApiVersionsRequest request = ApiVersionsRequest.builder().build();
+        return apiVersions(request);
+    }
+
+    public CompletableFuture<ApiVersionsResponse> apiVersions(ApiVersionsRequest request) {
+        return sendAndReceive(request, ApiVersionsResponse.class);  //TODO transform error codes into exceptions
+    }
+
     private <T> CompletableFuture<T> sendAndReceive(Object payload, Class<T> responseClass)
             throws CommunicationException {
+        Short apiVersion = Optional.ofNullable(payload.getClass().getAnnotation(ApiVersion.class))
+                .map(ApiVersion::value)
+                .orElse((short) 0);
         Request request = Request.builder()
-                .apiVersion(ApiVersion.V0.getVersionKey())
+                .apiVersion(apiVersion)
                 .clientId(clientId)
                 .correlationId(correlationIdCounter.incrementAndGet())
                 .message(payload)

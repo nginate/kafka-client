@@ -1,7 +1,8 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
-import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.serialization.ApiKey;
+import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
 import lombok.Data;
 
@@ -9,9 +10,16 @@ import static com.github.nginate.kafka.serialization.TypeName.*;
 
 @Data
 @ApiKey(KafkaApiKeys.PRODUCE)
+@ApiVersion(2)
 public class ProduceResponse {
     @Type(value = WRAPPER, order = 2)
     private ProduceResponseData[] produceResponseData;
+    /**
+     * Duration in milliseconds for which the request was throttled due to quota violation.
+     * (Zero if the request did not violate any quota.)
+     */
+    @Type(value = INT32, order = 3)
+    private Integer throttleTimeMs;
 
     @Data
     public static class ProduceResponseData {
@@ -42,6 +50,14 @@ public class ProduceResponse {
              */
             @Type(value = INT64, order = 2)
             private Long offset;
+            /**
+             * The timestamp returned by broker after appending the messages.
+             * If CreateTime is used for the topic, the timestamp will be -1.
+             * If LogAppendTime is used for the topic, the timestamp will be
+             * the broker local time when the messages are appended.
+             */
+            @Type(value = INT64, order = 3)
+            private Long timestamp;
         }
     }
 }
