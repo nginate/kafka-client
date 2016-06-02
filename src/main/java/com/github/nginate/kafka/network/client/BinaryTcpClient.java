@@ -9,6 +9,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -41,14 +42,16 @@ public class BinaryTcpClient {
 				.option(ChannelOption.SO_KEEPALIVE, true)
 				.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectionTimeoutMillis())
 				.option(ChannelOption.SO_TIMEOUT, config.getSocketTimeoutMillis())
-				.option(ChannelOption.MAX_MESSAGES_PER_READ, config.getMaxMessagesToRead())
-				.handler(new ChannelInitializer<SocketChannel>() {
+                .option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.getMaxMessagesToRead()))
+                .handler(new ChannelInitializer<SocketChannel>() {
 					@Override
 					public void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new BinaryMessageDecoder(config.getSerializer(), context),
+                        ch.pipeline().addLast(
+                                new BinaryMessageDecoder(config.getSerializer(), context),
                                 new BinaryMessageEncoder(config.getSerializer()),
-                                new BinaryTcpClientHandler(BinaryTcpClient.this));
-					}
+                                new BinaryTcpClientHandler(BinaryTcpClient.this)
+                        );
+                    }
                 })
                 .validate();
 
@@ -79,7 +82,7 @@ public class BinaryTcpClient {
             return CompletableFuture.completedFuture(null);
         }
 
-        return waitForCompletion(bootstrap.group().shutdownGracefully())
+        return waitForCompletion(bootstrap.config().group().shutdownGracefully())
                 .whenComplete((o, throwable) -> {
                     responseMap.clear();
                     context.clear();
