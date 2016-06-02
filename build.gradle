@@ -44,10 +44,6 @@ dependencies {
 
     // Logging
     compile "org.slf4j:slf4j-api:$slf4jVersion"
-    compile 'log4j:log4j:1.2.17'
-    compile "org.slf4j:log4j-over-slf4j:$slf4jVersion"
-    compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
-    compile "org.slf4j:jul-to-slf4j:$slf4jVersion"
 
     // Utils
     compile 'com.google.guava:guava:19.0'
@@ -72,6 +68,9 @@ dependencies {
     testCompile "com.github.nginate:commons-testing:1.0.0"
     testCompile "com.github.nginate:commons-docker:1.0.0"
 
+    testRuntime "org.slf4j:log4j-over-slf4j:$slf4jVersion"
+    testRuntime "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+    testRuntime "org.slf4j:jul-to-slf4j:$slf4jVersion"
     testRuntime 'ch.qos.logback:logback-classic:1.1.7'
 }
 
