@@ -25,25 +25,28 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
-import static com.github.nginate.commons.lang.await.Await.waitUntil;
 import static com.github.nginate.kafka.util.StringUtils.format;
 import static java.util.Arrays.stream;
 
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final ScheduledExecutorService poller = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService metadataUpdater = Executors.newSingleThreadScheduledExecutor();
     private final ScheduledExecutorService heartbeatExecutor = Executors.newSingleThreadScheduledExecutor();
 
     private final ClusterConfiguration configuration;
     private final KafkaSerializer serializer;
     private final ClusterMetadata metadata;
+    private final SubscriberContext subscriberContext;
 
     private final ZookeeperClient zookeeperClient;
     private final Map<String, List<MessageHandler<?>>> handlers;
     private final Map<String, KafkaDeserializer> deserializers;
-    private final Map<Integer, KafkaBrokerClient> brokerClients; //TODO cache with TTL
+    private final Map<String, KafkaBrokerClient> brokerClients; //TODO cache with TTL
     private final Map<String, ScheduledFuture<?>> pollingTasks = new HashMap<>();
     private final ProduceRequestBuilder produceRequestBuilder;
+    private ScheduledFuture<?> heartBeatTask;
+    private ScheduledFuture<?> metadataTask;
 
     public KafkaClusterClientImpl() {
         this(ClusterConfiguration.defaultConfig(), new KafkaSerializerImpl());
@@ -53,6 +56,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         this.configuration = configuration;
         this.serializer = serializer;
         metadata = new ClusterMetadata();
+        subscriberContext = new SubscriberContext();
         handlers = new HashMap<>();
         deserializers = new HashMap<>();
         brokerClients = new ConcurrentHashMap<>();
@@ -62,7 +66,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
 
         ZkClient zkClient = new ZkClient(configuration.getZookeeperUrl());
         zookeeperClient = new ZookeeperClient(zkClient);
-        loadClusterMetadata();
+        metadataTask = metadataUpdater.scheduleAtFixedRate(this::loadClusterMetadata, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     private void loadClusterMetadata() {
@@ -70,61 +74,70 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         if (CollectionUtils.isNotEmpty(nodes)) {
             ZkBrokerInfo broker = nodes.get(0);
 
-            KafkaBrokerClient brokerClient = new KafkaBrokerClient(broker.getHost(), broker.getPort());
-            brokerClient.topicMetadata().thenAcceptAsync(metadata::update).thenAccept(aVoid -> brokerClient.close());
+            String brokerUri = broker.getHost() + broker.getPort();
+            KafkaBrokerClient brokerClient = brokerClients.computeIfAbsent(brokerUri,
+                    s -> new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+            brokerClient.topicMetadata().thenAcceptAsync(metadata::update);
         }
+    }
+
+    @Override
+    public boolean isClusterOperational() {
+        return metadata.availableBrokers() > 0;
     }
 
     @Synchronized
     @Override
     public <T> void subscribeWith(String topic, KafkaDeserializer<T> deserializer, MessageHandler<T> messageHandler) {
-        handlers.putIfAbsent(topic, new ArrayList<>());
-        handlers.get(topic).add(messageHandler);
-        deserializers.put(topic, deserializer);
-
-        metadata.initTopicLog(topic, configuration.getDefaultGeneration());
-
-        ScheduledFuture<?> scheduledFuture = poller.scheduleAtFixedRate(() -> {
-            GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
-                Optional<TopicMetadataBroker> randomBroker = metadata.randomBroker();
-                AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>();
-                if (randomBroker.isPresent()) {
-                    KafkaBrokerClient client = getKafkaBrokerClient(randomBroker.get());
-                    client.getGroupCoordinator(configuration.getConsumerGroupId())
-                            .whenComplete((response, throwable) -> {
-                                if (response != null) {
-                                    short errorCode = response.getErrorCode();
-                                    if (errorCode == ErrorCodes.NO_ERROR) {
-                                        coordinatorRef.set(response.getCoordinator());
-                                        //TODO schedule heartbeats
+        if (handlers.isEmpty()) {
+            heartBeatTask = heartbeatExecutor.scheduleAtFixedRate(() -> {
+                GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
+                    Optional<TopicMetadataBroker> randomBroker = metadata.randomBroker();
+                    AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>();
+                    if (randomBroker.isPresent()) {
+                        KafkaBrokerClient client = getKafkaBrokerClient(randomBroker.get());
+                        client.getGroupCoordinator(configuration.getConsumerGroupId())
+                                .whenComplete((response, throwable) -> {
+                                    if (response != null) {
+                                        short errorCode = response.getErrorCode();
+                                        if (errorCode == ErrorCodes.NO_ERROR) {
+                                            coordinatorRef.set(response.getCoordinator());
+                                            //TODO schedule heartbeats
+                                        }
                                     }
-                                }
-                            });
-                }
-
-                return coordinatorRef.get();
-            });
-
-            metadata.checkGroupJoined(configuration.getConsumerGroupId(), () -> {
-                KafkaBrokerClient coordinatorClient = getKafkaBrokerClient(coordinator);
-                AtomicReference<String> memberIdRef = new AtomicReference<>(null);
-
-                JoinGroupRequest request = JoinGroupRequest.builder().build();
-                coordinatorClient.joinGroup(request).whenComplete((response, throwable) -> {
-                    if (response != null) {
-                        short errorCode = response.getErrorCode();
-                        if (errorCode == ErrorCodes.NO_ERROR) {
-                            memberIdRef.set(response.getMemberId());
-                            //TODO find out what to do with other data
-                        }
+                                });
                     }
+
+                    return coordinatorRef.get();
                 });
 
-                return memberIdRef.get();
-            });
+                metadata.checkGroupJoined(configuration.getConsumerGroupId(), () -> {
+                    KafkaBrokerClient coordinatorClient = getKafkaBrokerClient(coordinator);
+                    AtomicReference<String> memberIdRef = new AtomicReference<>(null);
 
-        }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
-        pollingTasks.put(topic, scheduledFuture);
+                    JoinGroupRequest request = JoinGroupRequest.builder().build();
+                    coordinatorClient.joinGroup(request).whenComplete((response, throwable) -> {
+                        if (response != null) {
+                            short errorCode = response.getErrorCode();
+                            if (errorCode == ErrorCodes.NO_ERROR) {
+                                memberIdRef.set(response.getMemberId());
+                                //TODO find out what to do with other data
+                            }
+                        }
+                    });
+
+                    return memberIdRef.get();
+                });
+            }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
+
+/*            ScheduledFuture<?> pollerTask = poller.scheduleAtFixedRate(() -> {
+
+            }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);*/
+        }
+
+        handlers.putIfAbsent(topic, new ArrayList<>());
+        handlers.get(topic).add(messageHandler);
+        deserializers.putIfAbsent(topic, deserializer);
     }
 
     @Synchronized
@@ -133,35 +146,32 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         handlers.remove(topic);
         //TODO check consumers are gratefully stopped
         if (handlers.isEmpty()) {
-            //TODO stop consuming
+            heartBeatTask.cancel(false);
         }
     }
 
     @Override
     public CompletableFuture<Void> send(String topic, Object message) {
-        return CompletableFuture.runAsync(() ->
-                waitUntil(10000, () -> metadata.leaderFor(topic).isPresent() || metadata.randomBroker().isPresent()))
-                .thenRun(() -> {
-                    byte[] rawKafkaMessage = serializer.serialize(message);
+        byte[] rawKafkaMessage = serializer.serialize(message);
 
-                    Message kafkaMessage = buildMessage(rawKafkaMessage);
-                    MessageData messageData = buildMessageData(kafkaMessage);
-                    PartitionProduceData partitionProduceData = buildPartitionProduceData(messageData);
-                    TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
-                    ProduceRequest request = buildProduceRequest(topicProduceData);
+        Message kafkaMessage = buildMessage(rawKafkaMessage);
+        MessageData messageData = buildMessageData(topic, kafkaMessage);
+        PartitionProduceData partitionProduceData = buildPartitionProduceData(topic, messageData);
+        TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
+        ProduceRequest request = buildProduceRequest(topicProduceData);
 
-                    TopicMetadataBroker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker().orElse(null));
-                    log.debug("Sending produce request : {} to {}", request, broker);
+        TopicMetadataBroker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker()
+                .orElseThrow(() -> new KafkaException("No brokers in cluster")));
+        log.debug("Sending produce request : {} to {}", request, broker);
 
-                    KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
+        KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
 
-                    topicLeaderClient.produce(request)
-                            .thenAccept(produceResponse -> {
-                                if (isProduceFailed(produceResponse)) {
-                                    throw new KafkaException(format("Produce request failed : {}", produceResponse));
-                                }
-                            });
-                });
+        return topicLeaderClient.produce(request).thenAccept(produceResponse -> {
+            if (isProduceFailed(produceResponse)) {
+                log.error("Produce request failed : {}", produceResponse);
+                throw new KafkaException(format("Produce request failed : {}", produceResponse));
+            }
+        });
     }
 
     @Override
@@ -170,12 +180,12 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {
-        return brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+        return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
                 new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(GroupCoordinatorBroker broker) {
-        return brokerClients.computeIfAbsent(broker.getNodeId(), integer ->
+        return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
                 new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }
 
@@ -192,19 +202,19 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 .build();
     }
 
-    private PartitionProduceData buildPartitionProduceData(MessageData messageData) {
+    private PartitionProduceData buildPartitionProduceData(String topic, MessageData messageData) {
         MessageSet messageSet = new MessageSet();
         messageSet.setMessageDatas(new MessageData[]{messageData});
         return PartitionProduceData.builder()
-                .partition(0) //FIXME select actual partition
+                .partition(metadata.partitionForTopic(topic))
                 .messageSetSize(1)
                 .messageSet(messageSet)
                 .build();
     }
 
-    private MessageData buildMessageData(Message kafkaMessage) {
+    private MessageData buildMessageData(String topic, Message kafkaMessage) {
         return MessageData.builder()
-                .offset(0L)
+                .offset(metadata.offsetForTopic(topic))
                 .messageSize(kafkaMessage.getValue().length)
                 .message(kafkaMessage)
                 .build();

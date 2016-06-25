@@ -13,13 +13,17 @@ public class ClusterConfiguration {
     private Integer produceTimeout;
     private Long pollingInterval;
     /**
+     * Timeout millis client will be waiting for topic leader or for any other available broker to produce message
+     */
+    private Integer produceWaitOnMetadataTimeout;
+    /**
      * A unique string that identifies the consumer group this consumer belongs to. This property is required if the
      * consumer uses either the group management functionality by using <code>subscribe(topic)</code> or the Kafka-based
      * offset management strategy.
      */
     private String consumerGroupId;
     /**
-     * Protocol veriosn specific
+     * Protocol version specific
      */
     private Integer defaultGeneration;
 
@@ -27,6 +31,7 @@ public class ClusterConfiguration {
         return ClusterConfiguration.builder()
                 .consumerGroupId(UUID.randomUUID().toString())
                 .defaultGeneration(-1)
+                .produceWaitOnMetadataTimeout(10000)
                 .build();
     }
 }

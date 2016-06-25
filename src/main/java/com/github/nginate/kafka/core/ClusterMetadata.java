@@ -90,4 +90,17 @@ class ClusterMetadata {
     public void checkGroupJoined(String groupId, Supplier<String> memberIdSupplier) {
         groupMemberIds.computeIfAbsent(groupId, s -> memberIdSupplier.get());
     }
+
+    public Integer partitionForTopic(String topic) {
+        List<PartitionMetadata> partitionMetadatas = partitionsByTopic.getOrDefault(topic, emptyList());
+        return partitionMetadatas.stream().findAny().map(PartitionMetadata::getPartitionId).orElse(0);
+    }
+
+    public Long offsetForTopic(String topic) {
+        return 0L;
+    }
+
+    public int availableBrokers() {
+        return clusterNodes.size();
+    }
 }
