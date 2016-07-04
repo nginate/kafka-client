@@ -1,7 +1,7 @@
 package com.github.nginate.kafka.core;
 
 import com.github.nginate.kafka.exceptions.KafkaException;
-import com.github.nginate.kafka.protocol.ErrorCodes;
+import com.github.nginate.kafka.protocol.Error;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData.Message;
@@ -13,6 +13,9 @@ import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicPr
 import com.github.nginate.kafka.protocol.messages.response.GroupCoordinatorResponse.GroupCoordinatorBroker;
 import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;
 import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadataBroker;
+import com.github.nginate.kafka.protocol.validation.ResponseValidator;
+import com.github.nginate.kafka.protocol.validation.ValidatorProvider;
+import com.github.nginate.kafka.protocol.validation.ValidatorProviderImpl;
 import com.github.nginate.kafka.zookeeper.ZkBrokerInfo;
 import com.github.nginate.kafka.zookeeper.ZookeeperClient;
 import lombok.Synchronized;
@@ -36,6 +39,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
 
     private final ClusterConfiguration configuration;
     private final KafkaSerializer serializer;
+    private final ValidatorProvider validatorProvider;
     private final ClusterMetadata metadata;
     private final SubscriberContext subscriberContext;
 
@@ -55,6 +59,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     public KafkaClusterClientImpl(ClusterConfiguration configuration, KafkaSerializer serializer) {
         this.configuration = configuration;
         this.serializer = serializer;
+        validatorProvider = new ValidatorProviderImpl();
         metadata = new ClusterMetadata();
         subscriberContext = new SubscriberContext();
         handlers = new HashMap<>();
@@ -100,7 +105,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                                 .whenComplete((response, throwable) -> {
                                     if (response != null) {
                                         short errorCode = response.getErrorCode();
-                                        if (errorCode == ErrorCodes.NO_ERROR) {
+                                        if (!Error.isError(errorCode)) {
                                             coordinatorRef.set(response.getCoordinator());
                                             //TODO schedule heartbeats
                                         }
@@ -119,7 +124,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                     coordinatorClient.joinGroup(request).whenComplete((response, throwable) -> {
                         if (response != null) {
                             short errorCode = response.getErrorCode();
-                            if (errorCode == ErrorCodes.NO_ERROR) {
+                            if (!Error.isError(errorCode)) {
                                 memberIdRef.set(response.getMemberId());
                                 //TODO find out what to do with other data
                             }
@@ -167,10 +172,8 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
 
         return topicLeaderClient.produce(request).thenAccept(produceResponse -> {
-            if (isProduceFailed(produceResponse)) {
-                log.error("Produce request failed : {}", produceResponse);
-                throw new KafkaException(format("Produce request failed : {}", produceResponse));
-            }
+            ResponseValidator<ProduceResponse> validator = validatorProvider.validatorFor(produceResponse);
+            validator.validate(produceResponse);
         });
     }
 
@@ -231,13 +234,5 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 .magicByte((byte) 0)
                 .value(rawKafkaMessage)
                 .build();
-    }
-
-    private boolean isProduceFailed(ProduceResponse response) {
-        return stream(response.getProduceResponseData())
-                .flatMap(data -> stream(data.getProduceResponsePartitionData()))
-                .filter(produceResponsePartitionData -> produceResponsePartitionData.getErrorCode() != -1)
-                .findAny()
-                .isPresent();
     }
 }
