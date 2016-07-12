@@ -35,6 +35,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 repositories {
+    mavenLocal()
     jcenter()
 }
 
@@ -66,7 +67,7 @@ dependencies {
     testCompile 'org.testng:testng:6.9.12'
     testCompile 'org.assertj:assertj-core:3.5.1'
     testCompile "com.github.nginate:commons-testing:1.0.0"
-    testCompile "com.github.nginate:commons-docker:1.0.0"
+    testCompile "com.github.nginate:commons-docker:2.0.0-SNAPSHOT"
 
     testRuntime "org.slf4j:log4j-over-slf4j:$slf4jVersion"
     testRuntime "org.slf4j:jcl-over-slf4j:$slf4jVersion"

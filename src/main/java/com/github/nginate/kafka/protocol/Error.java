@@ -5,8 +5,7 @@ import static java.util.Arrays.stream;
 
 /**
  * @see <a href=
- * "https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol
- * -Error">
+ * "https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-Error">
  * Kafka protocol errors</a>
  */
 public enum Error {
