@@ -7,6 +7,7 @@ import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -27,6 +28,7 @@ class ClusterMetadata {
     private final Map<String, GroupCoordinatorBroker> groupCoordinators = new ConcurrentHashMap<>();
     private final Map<String, String> groupMemberIds = new ConcurrentHashMap<>();
     private volatile Map<String, AtomicInteger> topicGenerations = new HashMap<>();
+    private final Map<String, CompletableFuture<TopicMetadataBroker>> topicLeaderFutures = new ConcurrentHashMap<>();
 
     public void update(TopicMetadataResponse metadataResponse) {
         clusterNodes = stream(metadataResponse.getBrokers()).collect(toMap(TopicMetadataBroker::getNodeId, identity()));
@@ -40,8 +42,14 @@ class ClusterMetadata {
 
             partitionData.stream()
                     .filter(partitionMetadata -> partitionMetadata.getLeader() >= 0)
-                    .findAny().ifPresent(partitionMetadata ->
-                    topicLeaders.put(topicMetadata.getTopicName(), clusterNodes.get(partitionMetadata.getLeader())));
+                    .findAny().ifPresent(partitionMetadata -> {
+                TopicMetadataBroker leader = clusterNodes.get(partitionMetadata.getLeader());
+                topicLeaders.put(topicMetadata.getTopicName(), leader);
+                CompletableFuture<TopicMetadataBroker> future = topicLeaderFutures.remove(topicMetadata.getTopicName());
+                if (future != null) {
+                    future.complete(leader);
+                }
+            });
         });
 
         this.partitionsByTopic = partitionsByTopic;
@@ -56,8 +64,8 @@ class ClusterMetadata {
         return topicGenerations.get(topic).get();
     }
 
-    public Optional<TopicMetadataBroker> leaderFor(String topic) {
-        return Optional.ofNullable(topicLeaders.get(topic));
+    public CompletableFuture<TopicMetadataBroker> leaderFor(String topic) {
+        return topicLeaderFutures.computeIfAbsent(topic, k -> new CompletableFuture<>());
     }
 
     public List<Integer> brokersForTopic(String topic) {
@@ -89,6 +97,10 @@ class ClusterMetadata {
 
     public void checkGroupJoined(String groupId, Supplier<String> memberIdSupplier) {
         groupMemberIds.computeIfAbsent(groupId, s -> memberIdSupplier.get());
+    }
+
+    public boolean topicExists(String topic) {
+        return partitionsByTopic.containsKey(topic);
     }
 
     public Integer partitionForTopic(String topic) {

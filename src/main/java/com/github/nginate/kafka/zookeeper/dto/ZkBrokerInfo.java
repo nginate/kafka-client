@@ -1,4 +1,4 @@
-package com.github.nginate.kafka.zookeeper;
+package com.github.nginate.kafka.zookeeper.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -13,4 +13,5 @@ public class ZkBrokerInfo {
     private String host;
     private Integer version;
     private Integer port;
+    private String rack;
 }

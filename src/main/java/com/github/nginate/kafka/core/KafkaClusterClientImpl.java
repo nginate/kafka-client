@@ -1,6 +1,5 @@
 package com.github.nginate.kafka.core;
 
-import com.github.nginate.kafka.exceptions.KafkaException;
 import com.github.nginate.kafka.protocol.Error;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
@@ -11,13 +10,11 @@ import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.Produce
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData.PartitionProduceData;
 import com.github.nginate.kafka.protocol.messages.response.GroupCoordinatorResponse.GroupCoordinatorBroker;
-import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;
 import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadataBroker;
-import com.github.nginate.kafka.protocol.validation.ResponseValidator;
 import com.github.nginate.kafka.protocol.validation.ValidatorProvider;
 import com.github.nginate.kafka.protocol.validation.ValidatorProviderImpl;
-import com.github.nginate.kafka.zookeeper.ZkBrokerInfo;
 import com.github.nginate.kafka.zookeeper.ZookeeperClient;
+import com.github.nginate.kafka.zookeeper.dto.ZkBrokerInfo;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
@@ -28,8 +25,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
-import static com.github.nginate.kafka.util.StringUtils.format;
-import static java.util.Arrays.stream;
+import static java.util.Collections.emptyMap;
 
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
@@ -157,24 +153,29 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
 
     @Override
     public CompletableFuture<Void> send(String topic, Object message) {
-        byte[] rawKafkaMessage = serializer.serialize(message);
+        if (!metadata.topicExists(topic)) {
+            zookeeperClient.createTopic(topic, configuration.getDefaultPartitions(),
+                    configuration.getDefaultReplicationFactor(), emptyMap());
+        }
 
-        Message kafkaMessage = buildMessage(rawKafkaMessage);
-        MessageData messageData = buildMessageData(topic, kafkaMessage);
-        PartitionProduceData partitionProduceData = buildPartitionProduceData(topic, messageData);
-        TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
-        ProduceRequest request = buildProduceRequest(topicProduceData);
+        return metadata.leaderFor(topic)
+                .thenApply(this::getKafkaBrokerClient)
+                .thenCompose(client -> {
+                    byte[] rawKafkaMessage = serializer.serialize(message);
 
-        TopicMetadataBroker broker = metadata.leaderFor(topic).orElse(metadata.randomBroker()
-                .orElseThrow(() -> new KafkaException("No brokers in cluster")));
-        log.debug("Sending produce request : {} to {}", request, broker);
+                    Long offset = metadata.offsetForTopic(topic);
+                    Integer partition = metadata.partitionForTopic(topic);
 
-        KafkaBrokerClient topicLeaderClient = getKafkaBrokerClient(broker);
+                    Message kafkaMessage = buildMessage(rawKafkaMessage);
+                    MessageData messageData = buildMessageData(offset, kafkaMessage);
+                    PartitionProduceData partitionProduceData = buildPartitionProduceData(partition, messageData);
+                    TopicProduceData topicProduceData = buildTopicProduceData(topic, partitionProduceData);
+                    ProduceRequest request = buildProduceRequest(topicProduceData);
 
-        return topicLeaderClient.produce(request).thenAccept(produceResponse -> {
-            ResponseValidator<ProduceResponse> validator = validatorProvider.validatorFor(produceResponse);
-            validator.validate(produceResponse);
-        });
+                    return client.produce(request);
+                })
+                .thenAccept(produceResponse ->
+                        validatorProvider.validatorFor(produceResponse).validate(produceResponse));
     }
 
     @Override
@@ -183,8 +184,8 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {
-        return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
-                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
+        return brokerClients.computeIfAbsent("10.2.2.2099093", integer ->
+                new KafkaBrokerClient("10.2.2.209", 9093));
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(GroupCoordinatorBroker broker) {
@@ -205,19 +206,19 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                 .build();
     }
 
-    private PartitionProduceData buildPartitionProduceData(String topic, MessageData messageData) {
+    private PartitionProduceData buildPartitionProduceData(Integer partition, MessageData messageData) {
         MessageSet messageSet = new MessageSet();
         messageSet.setMessageDatas(new MessageData[]{messageData});
         return PartitionProduceData.builder()
-                .partition(metadata.partitionForTopic(topic))
+                .partition(partition)
                 .messageSetSize(1)
                 .messageSet(messageSet)
                 .build();
     }
 
-    private MessageData buildMessageData(String topic, Message kafkaMessage) {
+    private MessageData buildMessageData(Long offset, Message kafkaMessage) {
         return MessageData.builder()
-                .offset(metadata.offsetForTopic(topic))
+                .offset(offset)
                 .messageSize(kafkaMessage.getValue().length)
                 .message(kafkaMessage)
                 .build();

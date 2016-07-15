@@ -26,6 +26,8 @@ public class KafkaClusterClientIT extends AbstractFunctionalTest {
                 .zookeeperUrl(format("{}:{}", getZookeeperHost(), getZookeeperPort()))
                 .pollingInterval(2000L)
                 .produceWaitOnMetadataTimeout(10000)
+                .defaultReplicationFactor(1)
+                .defaultPartitions(1)
                 .build();
         kafkaClusterClient = new KafkaClusterClientImpl(clusterConfiguration, payload ->
                 payload.toString().getBytes(Charset.forName("UTF-8")));
@@ -41,10 +43,10 @@ public class KafkaClusterClientIT extends AbstractFunctionalTest {
     @Test
     public void testProduceMessage() throws Exception {
         String stringMessage = "produce message";
-        String topic = "test topic";
+        String topic = "test_topic";
 
         CompletableFuture<Void> sendFuture = kafkaClusterClient.send(topic, stringMessage);
-        await(sendFuture);
+        await(sendFuture, 30000);
 
         CompletableFuture<String> listenerFuture = new CompletableFuture<>();
         kafkaClusterClient.subscribeWith(topic,

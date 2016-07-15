@@ -26,12 +26,16 @@ public class ClusterConfiguration {
      * Protocol version specific
      */
     private Integer defaultGeneration;
+    private Integer defaultPartitions;
+    private Integer defaultReplicationFactor;
 
     public static ClusterConfiguration defaultConfig() {
         return ClusterConfiguration.builder()
                 .consumerGroupId(UUID.randomUUID().toString())
                 .defaultGeneration(-1)
                 .produceWaitOnMetadataTimeout(10000)
+                .defaultPartitions(1)
+                .defaultReplicationFactor(1)
                 .build();
     }
 }
