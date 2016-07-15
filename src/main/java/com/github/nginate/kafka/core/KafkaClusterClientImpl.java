@@ -184,8 +184,8 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {
-        return brokerClients.computeIfAbsent("10.2.2.2099093", integer ->
-                new KafkaBrokerClient("10.2.2.209", 9093));
+        return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
+                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(GroupCoordinatorBroker broker) {
