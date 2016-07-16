@@ -43,7 +43,6 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final Map<String, List<MessageHandler<?>>> handlers;
     private final Map<String, KafkaDeserializer> deserializers;
     private final Map<String, KafkaBrokerClient> brokerClients; //TODO cache with TTL
-    private final Map<String, ScheduledFuture<?>> pollingTasks = new HashMap<>();
     private final ProduceRequestBuilder produceRequestBuilder;
     private ScheduledFuture<?> heartBeatTask;
     private ScheduledFuture<?> metadataTask;
@@ -78,7 +77,8 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
             String brokerUri = broker.getHost() + broker.getPort();
             KafkaBrokerClient brokerClient = brokerClients.computeIfAbsent(brokerUri,
                     s -> new KafkaBrokerClient(broker.getHost(), broker.getPort()));
-            brokerClient.topicMetadata().thenAcceptAsync(metadata::update);
+            Set<String> topics = metadata.getTopics();
+            brokerClient.topicMetadata(topics.toArray(new String[topics.size()])).thenAcceptAsync(metadata::update);
         }
     }
 
@@ -90,6 +90,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     @Synchronized
     @Override
     public <T> void subscribeWith(String topic, KafkaDeserializer<T> deserializer, MessageHandler<T> messageHandler) {
+        metadata.addTopic(topic);
         if (handlers.isEmpty()) {
             heartBeatTask = heartbeatExecutor.scheduleAtFixedRate(() -> {
                 GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
@@ -130,10 +131,6 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
                     return memberIdRef.get();
                 });
             }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
-
-/*            ScheduledFuture<?> pollerTask = poller.scheduleAtFixedRate(() -> {
-
-            }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);*/
         }
 
         handlers.putIfAbsent(topic, new ArrayList<>());
@@ -147,13 +144,14 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         handlers.remove(topic);
         //TODO check consumers are gratefully stopped
         if (handlers.isEmpty()) {
-            heartBeatTask.cancel(false);
+            Optional.ofNullable(heartBeatTask).ifPresent(task -> task.cancel(false));
         }
     }
 
     @Override
     public CompletableFuture<Void> send(String topic, Object message) {
         if (!metadata.topicExists(topic)) {
+            metadata.addTopic(topic);
             zookeeperClient.createTopic(topic, configuration.getDefaultPartitions(),
                     configuration.getDefaultReplicationFactor(), emptyMap());
         }
@@ -180,7 +178,8 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
 
     @Override
     public void close() {
-        // TODO: impl
+        metadata.getTopics().forEach(this::unSubscribeFrom);
+        metadataTask.cancel(false);
     }
 
     private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {

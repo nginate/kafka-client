@@ -4,12 +4,12 @@ import com.github.nginate.kafka.protocol.messages.response.GroupCoordinatorRespo
 import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse;
 import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadata.PartitionMetadata;
 import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadataBroker;
+import lombok.Synchronized;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -20,52 +20,65 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
-@ThreadSafe
 class ClusterMetadata {
-    private volatile Map<Integer, TopicMetadataBroker> clusterNodes = new HashMap<>();
-    private volatile Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
-    private volatile Map<String, TopicMetadataBroker> topicLeaders = new HashMap<>();
-    private final Map<String, GroupCoordinatorBroker> groupCoordinators = new ConcurrentHashMap<>();
+    @SuppressWarnings("unused")
+    private final Object topicMonitor = new Object();
+
+    private final Map<Integer, TopicMetadataBroker> clusterNodes = new HashMap<>();
+    private final Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
+    private final Map<String, TopicMetadataBroker> topicLeaders = new HashMap<>();
+    //TODO try to remember the purpose of this
     private final Map<String, String> groupMemberIds = new ConcurrentHashMap<>();
-    private volatile Map<String, AtomicInteger> topicGenerations = new HashMap<>();
-    private final Map<String, CompletableFuture<TopicMetadataBroker>> topicLeaderFutures = new ConcurrentHashMap<>();
 
-    public void update(TopicMetadataResponse metadataResponse) {
-        clusterNodes = stream(metadataResponse.getBrokers()).collect(toMap(TopicMetadataBroker::getNodeId, identity()));
+    /**
+     * Utility field to store topic names used by this client only. Should be filled by subscribe/publish requests
+     */
+    private final Set<String> topics = new CopyOnWriteArraySet<>();
 
-        Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
-        Map<String, TopicMetadataBroker> topicLeaders = new HashMap<>();
+    private final Map<String, GroupCoordinatorBroker> groupCoordinators = new ConcurrentHashMap<>();
+    private final Map<String, CompletableFuture<TopicMetadataBroker>> topicLeaderWatchers = new ConcurrentHashMap<>();
 
-        stream(metadataResponse.getTopicMetadata()).forEach(topicMetadata -> {
-            List<PartitionMetadata> partitionData = unmodifiableList(asList(topicMetadata.getPartitionMetadata()));
-            partitionsByTopic.put(topicMetadata.getTopicName(), partitionData);
+    @Synchronized
+    void update(TopicMetadataResponse metadataResponse) {
+        cleanCache();
+
+        Map<Integer, TopicMetadataBroker> updatedClusterNodes = stream(metadataResponse.getBrokers())
+                .collect(toMap(TopicMetadataBroker::getNodeId, identity()));
+
+        Map<String, List<PartitionMetadata>> updatedPartitionsByTopic = new HashMap<>();
+        Map<String, TopicMetadataBroker> updatedTopicLeaders = new HashMap<>();
+
+        stream(metadataResponse.getTopicMetadata()).forEach(metadata -> {
+            List<PartitionMetadata> partitionData = unmodifiableList(asList(metadata.getPartitionMetadata()));
+            updatedPartitionsByTopic.put(metadata.getTopicName(), partitionData);
 
             partitionData.stream()
                     .filter(partitionMetadata -> partitionMetadata.getLeader() >= 0)
                     .findAny().ifPresent(partitionMetadata -> {
-                TopicMetadataBroker leader = clusterNodes.get(partitionMetadata.getLeader());
-                topicLeaders.put(topicMetadata.getTopicName(), leader);
-                CompletableFuture<TopicMetadataBroker> future = topicLeaderFutures.remove(topicMetadata.getTopicName());
+                TopicMetadataBroker leader = updatedClusterNodes.get(partitionMetadata.getLeader());
+                updatedTopicLeaders.put(metadata.getTopicName(), leader);
+                CompletableFuture<TopicMetadataBroker> future = topicLeaderWatchers.remove(metadata.getTopicName());
                 if (future != null) {
                     future.complete(leader);
                 }
             });
         });
 
-        this.partitionsByTopic = partitionsByTopic;
-        this.topicLeaders = topicLeaders;
+        clusterNodes.putAll(updatedClusterNodes);
+        partitionsByTopic.putAll(updatedPartitionsByTopic);
+        topicLeaders.putAll(updatedTopicLeaders);
     }
 
-    public void initTopicLog(String topic, int defaultGeneration) {
-        topicGenerations.put(topic, new AtomicInteger(defaultGeneration));
+    private void cleanCache() {
+        clusterNodes.clear();
+        partitionsByTopic.clear();
+        topicLeaders.clear();
+        groupCoordinators.clear();
     }
 
-    public Integer generationForTopic(String topic) {
-        return topicGenerations.get(topic).get();
-    }
-
+    @Synchronized
     public CompletableFuture<TopicMetadataBroker> leaderFor(String topic) {
-        return topicLeaderFutures.computeIfAbsent(topic, k -> new CompletableFuture<>());
+        return topicLeaderWatchers.computeIfAbsent(topic, k -> new CompletableFuture<>());
     }
 
     public List<Integer> brokersForTopic(String topic) {
@@ -114,5 +127,15 @@ class ClusterMetadata {
 
     public int availableBrokers() {
         return clusterNodes.size();
+    }
+
+    @Synchronized("topicMonitor")
+    public void addTopic(String topic) {
+        topics.add(topic);
+    }
+
+    @Synchronized("topicMonitor")
+    public Set<String> getTopics() {
+        return topics;
     }
 }

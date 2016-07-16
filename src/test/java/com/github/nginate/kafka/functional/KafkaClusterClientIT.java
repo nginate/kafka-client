@@ -46,7 +46,7 @@ public class KafkaClusterClientIT extends AbstractFunctionalTest {
         String topic = "test_topic";
 
         CompletableFuture<Void> sendFuture = kafkaClusterClient.send(topic, stringMessage);
-        await(sendFuture, 30000);
+        await(sendFuture, 180000);
 
         CompletableFuture<String> listenerFuture = new CompletableFuture<>();
         kafkaClusterClient.subscribeWith(topic,

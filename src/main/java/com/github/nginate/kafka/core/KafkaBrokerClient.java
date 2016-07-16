@@ -11,6 +11,7 @@ import com.github.nginate.kafka.protocol.messages.response.*;
 import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.BinaryMessageSerializerImpl;
 import com.google.common.base.Throwables;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.Closeable;
 import java.util.Optional;
@@ -38,7 +39,8 @@ public class KafkaBrokerClient implements Closeable {
     }
 
     public CompletableFuture<TopicMetadataResponse> topicMetadata(String... topicNames) {
-        TopicMetadataRequest request = TopicMetadataRequest.builder().topics(topicNames).build();
+        String[] requestTopics = ArrayUtils.isEmpty(topicNames) ? null : topicNames;
+        TopicMetadataRequest request = TopicMetadataRequest.builder().topics(requestTopics).build();
         return topicMetadata(request);
     }
 

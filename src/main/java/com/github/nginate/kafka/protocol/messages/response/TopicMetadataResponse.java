@@ -42,7 +42,7 @@ public class TopicMetadataResponse {
         @Type(value = STRING, order = 1)
         private String topicName;
         @Type(value = BOOLEAN, order = 2)
-        private String internal;
+        private Boolean internal;
         @Type(value = WRAPPER, order = 3)
         private PartitionMetadata[] partitionMetadata;
 

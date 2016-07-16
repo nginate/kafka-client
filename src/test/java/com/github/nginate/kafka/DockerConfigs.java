@@ -25,6 +25,7 @@ public final class DockerConfigs {
                 .env("ADVERTISED_HOST", kafkaHost)
                 .env("KAFKA_PORT", kafkaPort.toString())
                 .env("KAFKA_HEAP_OPTS", "-Xmx256M -Xms128M")
+                .env("OVERRIDE_KAFKA_PROPS", "auto.leader.rebalance.enable=true,leader.imbalance.check.interval.seconds=1")
                 .logConfig(new LogConfig(LogConfig.LoggingType.DEFAULT))
                 .restartPolicy(RestartPolicy.noRestart())
                 .build();
