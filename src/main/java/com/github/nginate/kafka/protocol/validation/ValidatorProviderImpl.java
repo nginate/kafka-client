@@ -1,6 +1,7 @@
 package com.github.nginate.kafka.protocol.validation;
 
 import com.github.nginate.kafka.exceptions.KafkaException;
+import com.github.nginate.kafka.protocol.messages.HasRootErrorCode;
 import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;
 
 import java.util.HashMap;
@@ -11,6 +12,7 @@ public class ValidatorProviderImpl implements ValidatorProvider {
 
     public ValidatorProviderImpl() {
         validators.put(ProduceResponse.class, new ProduceValidator());
+        validators.put(HasRootErrorCode.class, new HasRootErrorCodeValidator());
     }
 
     @Override

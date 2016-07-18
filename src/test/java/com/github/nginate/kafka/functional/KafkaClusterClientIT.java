@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.charset.Charset;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +29,7 @@ public class KafkaClusterClientIT extends AbstractFunctionalTest {
                 .produceWaitOnMetadataTimeout(10000)
                 .defaultReplicationFactor(1)
                 .defaultPartitions(1)
+                .consumerGroupId(UUID.randomUUID().toString())
                 .build();
         kafkaClusterClient = new KafkaClusterClientImpl(clusterConfiguration, payload ->
                 payload.toString().getBytes(Charset.forName("UTF-8")));

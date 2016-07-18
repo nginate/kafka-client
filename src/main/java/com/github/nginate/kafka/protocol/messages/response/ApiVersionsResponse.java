@@ -1,6 +1,7 @@
 package com.github.nginate.kafka.protocol.messages.response;
 
 import com.github.nginate.kafka.protocol.KafkaApiKeys;
+import com.github.nginate.kafka.protocol.messages.HasRootErrorCode;
 import com.github.nginate.kafka.serialization.ApiKey;
 import com.github.nginate.kafka.serialization.ApiVersion;
 import com.github.nginate.kafka.serialization.Type;
@@ -12,7 +13,7 @@ import static com.github.nginate.kafka.serialization.TypeName.WRAPPER;
 @Data
 @ApiKey(KafkaApiKeys.API_VERSIONS)
 @ApiVersion(0)
-public class ApiVersionsResponse {
+public class ApiVersionsResponse implements HasRootErrorCode {
     @Type(INT16)
     private Short errorCode;
     /**

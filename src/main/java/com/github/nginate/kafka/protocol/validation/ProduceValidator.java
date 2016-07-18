@@ -1,7 +1,7 @@
 package com.github.nginate.kafka.protocol.validation;
 
 import com.github.nginate.kafka.exceptions.KafkaException;
-import com.github.nginate.kafka.exceptions.ProduceException;
+import com.github.nginate.kafka.exceptions.server.ProduceException;
 import com.github.nginate.kafka.exceptions.QuotaViolationException;
 import com.github.nginate.kafka.protocol.Error;
 import com.github.nginate.kafka.protocol.messages.response.ProduceResponse;

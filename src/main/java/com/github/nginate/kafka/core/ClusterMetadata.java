@@ -23,6 +23,8 @@ import static java.util.stream.Collectors.toMap;
 class ClusterMetadata {
     @SuppressWarnings("unused")
     private final Object topicMonitor = new Object();
+    @SuppressWarnings("unused")
+    private final Object groupMonitor = new Object();
 
     private final Map<Integer, TopicMetadataBroker> clusterNodes = new HashMap<>();
     private final Map<String, List<PartitionMetadata>> partitionsByTopic = new HashMap<>();
@@ -108,7 +110,7 @@ class ClusterMetadata {
         return groupCoordinators.computeIfAbsent(topic, s -> coordinatorSupplier.get());
     }
 
-    public void checkGroupJoined(String groupId, Supplier<String> memberIdSupplier) {
+    public void computeMemberIdIfAbsent(String groupId, Supplier<String> memberIdSupplier) {
         groupMemberIds.computeIfAbsent(groupId, s -> memberIdSupplier.get());
     }
 

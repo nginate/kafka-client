@@ -94,39 +94,39 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         if (handlers.isEmpty()) {
             heartBeatTask = heartbeatExecutor.scheduleAtFixedRate(() -> {
                 GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
-                    Optional<TopicMetadataBroker> randomBroker = metadata.randomBroker();
-                    AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>();
-                    if (randomBroker.isPresent()) {
-                        KafkaBrokerClient client = getKafkaBrokerClient(randomBroker.get());
-                        client.getGroupCoordinator(configuration.getConsumerGroupId())
-                                .whenComplete((response, throwable) -> {
-                                    if (response != null) {
-                                        short errorCode = response.getErrorCode();
-                                        if (!Error.isError(errorCode)) {
-                                            coordinatorRef.set(response.getCoordinator());
-                                            //TODO schedule heartbeats
-                                        }
-                                    }
-                                });
-                    }
-
+                    log.info("Coordinator is unknown. Requesting group {} coordinator", configuration.getConsumerGroupId());
+                    AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>(null);
+                    metadata.randomBroker()
+                            .map(this::getKafkaBrokerClient)
+                            .map(client -> client.getGroupCoordinator(configuration.getConsumerGroupId()))
+                            .ifPresent(responseFuture -> responseFuture.thenAccept(response -> {
+                                if (response.isSuccessful()) {
+                                    coordinatorRef.set(response.getCoordinator());
+                                } else {
+                                    log.warn("Could not retrieve group coordinator : {}", Error.forCode(response.getErrorCode()));
+                                }
+                            }));
                     return coordinatorRef.get();
                 });
 
-                metadata.checkGroupJoined(configuration.getConsumerGroupId(), () -> {
-                    KafkaBrokerClient coordinatorClient = getKafkaBrokerClient(coordinator);
+                metadata.computeMemberIdIfAbsent(configuration.getConsumerGroupId(), () -> {
+                    log.info("Client does not hold info about its consumer id. Requesting from {}", coordinator);
                     AtomicReference<String> memberIdRef = new AtomicReference<>(null);
 
-                    JoinGroupRequest request = JoinGroupRequest.builder().build();
-                    coordinatorClient.joinGroup(request).whenComplete((response, throwable) -> {
-                        if (response != null) {
-                            short errorCode = response.getErrorCode();
-                            if (!Error.isError(errorCode)) {
-                                memberIdRef.set(response.getMemberId());
-                                //TODO find out what to do with other data
-                            }
-                        }
-                    });
+                    Optional.ofNullable(coordinator)
+                            .map(this::getKafkaBrokerClient)
+                            .map(client -> {
+                                JoinGroupRequest request = JoinGroupRequest.builder()
+                                        .groupId(configuration.getConsumerGroupId())
+                                        .build();
+                                return client.joinGroup(request);
+                            }).ifPresent(responseFuture -> responseFuture.thenAccept(response -> {
+                                if (response.isSuccessful()) {
+                                    memberIdRef.set(response.getMemberId());
+                                } else {
+                                    log.warn("Could not retrieve member id : {}", Error.forCode(response.getErrorCode()));
+                                }
+                    }));
 
                     return memberIdRef.get();
                 });
