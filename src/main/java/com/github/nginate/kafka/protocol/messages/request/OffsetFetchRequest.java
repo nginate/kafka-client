@@ -25,6 +25,7 @@ public class OffsetFetchRequest {
     private OffsetFetchRequestTopicData[] topicData;
 
     @Data
+    @Builder
     public static class OffsetFetchRequestTopicData {
         @Type(STRING)
         private String topic;

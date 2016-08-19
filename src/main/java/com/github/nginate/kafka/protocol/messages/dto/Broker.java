@@ -20,4 +20,6 @@ public class Broker {
     private String host;
     @Type(value = INT32, order = 2)
     private Integer port;
+    @Type(value = STRING, order = 3)
+    private String rack;
 }

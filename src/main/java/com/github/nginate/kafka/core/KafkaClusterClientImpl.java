@@ -4,13 +4,14 @@ import com.github.nginate.kafka.protocol.Error;
 import com.github.nginate.kafka.protocol.messages.MessageSet;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData;
 import com.github.nginate.kafka.protocol.messages.MessageSet.MessageData.Message;
+import com.github.nginate.kafka.protocol.messages.dto.Broker;
+import com.github.nginate.kafka.protocol.messages.request.HeartbeatRequest;
 import com.github.nginate.kafka.protocol.messages.request.JoinGroupRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.ProduceRequestBuilder;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData;
 import com.github.nginate.kafka.protocol.messages.request.ProduceRequest.TopicProduceData.PartitionProduceData;
-import com.github.nginate.kafka.protocol.messages.response.GroupCoordinatorResponse.GroupCoordinatorBroker;
-import com.github.nginate.kafka.protocol.messages.response.TopicMetadataResponse.TopicMetadataBroker;
+import com.github.nginate.kafka.protocol.messages.response.ListGroupsResponse;
 import com.github.nginate.kafka.protocol.validation.ValidatorProvider;
 import com.github.nginate.kafka.protocol.validation.ValidatorProviderImpl;
 import com.github.nginate.kafka.zookeeper.ZookeeperClient;
@@ -22,10 +23,12 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
+import static com.github.nginate.kafka.protocol.Error.forCode;
 import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 public class KafkaClusterClientImpl implements KafkaClusterClient {
@@ -37,7 +40,6 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     private final KafkaSerializer serializer;
     private final ValidatorProvider validatorProvider;
     private final ClusterMetadata metadata;
-    private final SubscriberContext subscriberContext;
 
     private final ZookeeperClient zookeeperClient;
     private final Map<String, List<MessageHandler<?>>> handlers;
@@ -56,7 +58,6 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         this.serializer = serializer;
         validatorProvider = new ValidatorProviderImpl();
         metadata = new ClusterMetadata();
-        subscriberContext = new SubscriberContext();
         handlers = new HashMap<>();
         deserializers = new HashMap<>();
         brokerClients = new ConcurrentHashMap<>();
@@ -91,51 +92,76 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
     @Override
     public <T> void subscribeWith(String topic, KafkaDeserializer<T> deserializer, MessageHandler<T> messageHandler) {
         metadata.addTopic(topic);
+
         if (handlers.isEmpty()) {
             heartBeatTask = heartbeatExecutor.scheduleAtFixedRate(() -> {
-                GroupCoordinatorBroker coordinator = metadata.computeCoordinatorIfAbsent(topic, () -> {
-                    log.info("Coordinator is unknown. Requesting group {} coordinator", configuration.getConsumerGroupId());
-                    AtomicReference<GroupCoordinatorBroker> coordinatorRef = new AtomicReference<>(null);
-                    metadata.randomBroker()
-                            .map(this::getKafkaBrokerClient)
-                            .map(client -> client.getGroupCoordinator(configuration.getConsumerGroupId()))
-                            .ifPresent(responseFuture -> responseFuture.thenAccept(response -> {
-                                if (response.isSuccessful()) {
-                                    coordinatorRef.set(response.getCoordinator());
-                                } else {
-                                    log.warn("Could not retrieve group coordinator : {}", Error.forCode(response.getErrorCode()));
-                                }
-                            }));
-                    return coordinatorRef.get();
-                });
 
-                metadata.computeMemberIdIfAbsent(configuration.getConsumerGroupId(), () -> {
-                    log.info("Client does not hold info about its consumer id. Requesting from {}", coordinator);
-                    AtomicReference<String> memberIdRef = new AtomicReference<>(null);
+                String memberId = metadata.getMemberId(configuration.getConsumerGroupId());
+                if (memberId == null) {
+                    Broker coordinator = metadata.coordinator(configuration.getConsumerGroupId());
+                    if (coordinator == null) {
+                        Map<Broker, CompletableFuture<ListGroupsResponse>> brokerGroups = metadata.clusterNodes()
+                                .stream()
+                                .collect(toMap(identity(), broker -> getKafkaBrokerClient(broker).listGroups()));
 
-                    Optional.ofNullable(coordinator)
-                            .map(this::getKafkaBrokerClient)
-                            .map(client -> {
-                                JoinGroupRequest request = JoinGroupRequest.builder()
-                                        .groupId(configuration.getConsumerGroupId())
-                                        .build();
-                                return client.joinGroup(request);
-                            }).ifPresent(responseFuture -> responseFuture.thenAccept(response -> {
-                                if (response.isSuccessful()) {
-                                    memberIdRef.set(response.getMemberId());
-                                } else {
-                                    log.warn("Could not retrieve member id : {}", Error.forCode(response.getErrorCode()));
-                                }
-                    }));
+                        log.debug("Requesting consumer groups from {}", brokerGroups.keySet());
 
-                    return memberIdRef.get();
-                });
+                        CompletableFuture
+                                .allOf(brokerGroups.values().toArray(new CompletableFuture[brokerGroups.size()]))
+                                .thenApply(aVoid -> {
+                                    log.debug("All group requests completed");
+                                    return brokerGroups.entrySet().stream()
+                                            .collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getNow(null)));
+                                })
+                                .thenApply(map -> {
+                                    log.debug("Validating group responses : {}", map);
+                                    return map.entrySet().stream().filter(entry -> {
+                                        ListGroupsResponse response = entry.getValue();
+                                        if (Error.isError(response.getErrorCode())) {
+                                            log.warn("List groups request failed : {}", forCode(response
+                                                    .getErrorCode()));
+                                            return false;
+                                        }
+                                        return true;
+                                    }).collect(toMap(Map.Entry::getKey, entry -> entry.getValue().getGroups()));
+                                })
+                                .thenAccept(map -> {
+                                    log.debug("Updating metadata with new groups {}", map);
+                                    metadata.updateGroups(map);
+                                });
+                    } else {
+                        JoinGroupRequest request = JoinGroupRequest.builder()
+                                .groupId(configuration.getConsumerGroupId())
+                                .build();
+                        getKafkaBrokerClient(coordinator).joinGroup(request).thenAccept(response -> {
+                            if (Error.isError(response.getErrorCode())) {
+                                log.warn("Join group request failed : {}", forCode(response.getErrorCode()));
+                            } else {
+                                metadata.setMemberData(configuration.getConsumerGroupId(), response);
+                            }
+                        });
+                    }
+                } else {
+                    HeartbeatRequest request = HeartbeatRequest.builder()
+                            .memberId(memberId)
+                            .groupId(configuration.getConsumerGroupId())
+                            .generationId(metadata.generation(configuration.getConsumerGroupId()))
+                            .build();
+                    getKafkaBrokerClient(metadata.coordinator(configuration.getConsumerGroupId()))
+                            .checkHeartbeat(request)
+                            .thenAccept(response -> {
+                                log.debug("Heartbeat response {}", response);
+                            });
+                }
             }, 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
         }
 
         handlers.putIfAbsent(topic, new ArrayList<>());
         handlers.get(topic).add(messageHandler);
         deserializers.putIfAbsent(topic, deserializer);
+        poller.scheduleAtFixedRate(new ConsumeTask<>(() -> handlers.get(topic),
+                () -> metadata.brokersForTopic(topic).stream().map(this::getKafkaBrokerClient), deserializer,
+                ), 0, configuration.getPollingInterval(), TimeUnit.MILLISECONDS);
     }
 
     @Synchronized
@@ -182,12 +208,7 @@ public class KafkaClusterClientImpl implements KafkaClusterClient {
         metadataTask.cancel(false);
     }
 
-    private KafkaBrokerClient getKafkaBrokerClient(TopicMetadataBroker broker) {
-        return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
-                new KafkaBrokerClient(broker.getHost(), broker.getPort()));
-    }
-
-    private KafkaBrokerClient getKafkaBrokerClient(GroupCoordinatorBroker broker) {
+    private KafkaBrokerClient getKafkaBrokerClient(Broker broker) {
         return brokerClients.computeIfAbsent(broker.getHost() + broker.getPort(), integer ->
                 new KafkaBrokerClient(broker.getHost(), broker.getPort()));
     }

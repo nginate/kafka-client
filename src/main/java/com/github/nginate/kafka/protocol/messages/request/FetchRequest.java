@@ -61,6 +61,7 @@ public class FetchRequest {
     private FetchRequestTopicData[] topicData;
 
     @Data
+    @Builder
     public static class FetchRequestTopicData {
         /**
          * The name of the topic.
@@ -71,6 +72,7 @@ public class FetchRequest {
         private FetchRequestPartitionData[] partitionData;
 
         @Data
+        @Builder
         public static class FetchRequestPartitionData {
             /**
              * The id of the partition the fetch is for.

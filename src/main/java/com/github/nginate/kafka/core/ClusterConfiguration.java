@@ -36,6 +36,7 @@ public class ClusterConfiguration {
                 .produceWaitOnMetadataTimeout(10000)
                 .defaultPartitions(1)
                 .defaultReplicationFactor(1)
+                .pollingInterval(500L)
                 .build();
     }
 }

@@ -53,7 +53,7 @@ public class KafkaClusterClientIT extends AbstractFunctionalTest {
         CompletableFuture<String> listenerFuture = new CompletableFuture<>();
         kafkaClusterClient.subscribeWith(topic,
                 rawData -> new String(rawData, Charset.forName("UTF-8")),
-                listenerFuture::complete);
+                (value) -> listenerFuture.complete(value));
 
         String retrieved = listenerFuture.get(20, TimeUnit.SECONDS);
         assertThat(retrieved).isEqualTo(stringMessage);
