@@ -19,8 +19,8 @@ plugins {
 }
 
 ext {
-    slf4jVersion = '1.7.21'
-    nettyVersion = '4.1.2.Final'
+    slf4jVersion = '1.7.22'
+    nettyVersion = '4.1.7.Final'
 }
 
 apply plugin: 'java'
@@ -46,13 +46,13 @@ dependencies {
     compile "org.slf4j:slf4j-api:$slf4jVersion"
 
     // Utils
-    compile 'com.google.guava:guava:19.0'
-    compile 'org.apache.commons:commons-lang3:3.4'
-    compile 'commons-beanutils:commons-beanutils:1.9.2'
+    compile 'com.google.guava:guava:21.0'
+    compile 'org.apache.commons:commons-lang3:3.5'
+    compile 'commons-beanutils:commons-beanutils:1.9.3'
     compile "com.github.nginate:commons-lang:1.0.0"
-    compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.8.0'
+    compile 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.8.6'
 
-    compile('com.101tec:zkclient:0.9') {
+    compile('com.101tec:zkclient:0.10') {
         exclude group: 'log4j'
         exclude group: 'org.slf4j'
         exclude group: 'junit'
@@ -63,15 +63,15 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:3.0.1', optional
 
     testCompile 'junit:junit:4.12'
-    testCompile 'org.testng:testng:6.9.12'
-    testCompile 'org.assertj:assertj-core:3.5.1'
+    testCompile 'org.testng:testng:6.10'
+    testCompile 'org.assertj:assertj-core:3.6.1'
     testCompile "com.github.nginate:commons-testing:1.0.0"
     testCompile "com.github.nginate:commons-docker:1.0.0"
 
     testRuntime "org.slf4j:log4j-over-slf4j:$slf4jVersion"
     testRuntime "org.slf4j:jcl-over-slf4j:$slf4jVersion"
     testRuntime "org.slf4j:jul-to-slf4j:$slf4jVersion"
-    testRuntime 'ch.qos.logback:logback-classic:1.1.7'
+    testRuntime 'ch.qos.logback:logback-classic:1.1.8'
 }
 
 gradle.projectsEvaluated {
@@ -154,7 +154,7 @@ task pullDockerImages {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.14'
+    gradleVersion = '3.3'
 }
 
 bintrayUpload.dependsOn 'generatePomFileForMavenPublication', 'assemble'
